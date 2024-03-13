@@ -1,0 +1,18 @@
+{
+    "vgg16": {
+        "output_dim": 512
+    },
+    "mlp":{
+        "input_dim": 1024,
+        "hidden_dim": 128,
+        "output_dim": 1
+    },
+    "encoder": {
+        "input_dim": 3,
+        "d_model": 512,
+        "nhead": 8, 
+        "nhid": 2048, 
+        "nlayers": 3, 
+        "dropout": 0.1
+    }
+}
