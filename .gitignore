@@ -165,3 +165,4 @@ weights/
 *.pt
 *.ckpt
 *.safetensors
+*results/
