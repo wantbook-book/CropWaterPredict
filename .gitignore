@@ -166,3 +166,4 @@ weights/
 *.ckpt
 *.safetensors
 *results/
+*.zip
