@@ -153,4 +153,5 @@ if __name__ == '__main__':
             for image_file in path.iterdir():
                 if image_file.is_file():
                     if image_file.suffix.lower() in IMAGE_SUFFIXES:
+                        print('process image:', image_file)
                         process(image_file, output_dir=subdir_path, predictor=predictor)

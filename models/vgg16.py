@@ -2,7 +2,7 @@ import timm
 import torch
 import torch.nn as nn
 class VGG16(nn.Module):
-    def __init__(self, weights_path, num_classes):
+    def __init__(self, weights_path, num_classes, finetune=True):
         super(VGG16, self).__init__()
         self.model = timm.create_model(
             'vgg16.tv_in1k',
@@ -15,6 +15,12 @@ class VGG16(nn.Module):
         # 替换分类器
         # num_features:4096
         self.fc = nn.Linear(self.model.num_features, num_classes) 
+        if finetune:
+            for param in self.model.parameters():
+                param.requires_grad = False
+            # Make sure the last layer is trainable
+            for param in self.fc.parameters():
+                param.requires_grad = True
     def forward(self, x):
         x = self.model(x) 
         return self.fc(x)

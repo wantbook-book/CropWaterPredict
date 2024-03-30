@@ -17,7 +17,26 @@
 
    
 
-2. 
+2. 将数据集分为验证集和训练集
+
+   ```python
+   from torch.utils.data.dataset import random_split
+   
+   # 假设 dataset 已经被定义
+   dataset_size = len(dataset)  # 获取数据集的总大小
+   train_size = int(dataset_size * 0.8)  # 定义训练集大小，比如说80%
+   val_size = dataset_size - train_size  # 验证集大小
+   
+   # 随机分割数据集
+   train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+   
+   # 然后，你可以为训练集和验证集创建 DataLoader
+   train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=1)
+   val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False, num_workers=1)
+   
+   ```
+
+3. 
 
 
 
@@ -141,6 +160,49 @@
        print(row)
        break
    ```
+
+5. 查看列名
+
+   ```python
+   df.columns
+   ```
+
+   
+
+6. 空值可能为NaN也可能为NaT
+
+   在Pandas中，判断一个值是否为`NaT`（Not a Time），可以使用`pandas.isna()`函数或者`pandas.isnull()`函数。这两个函数对于`NaT`和`NaN`都会返回`True`，因此它们可以用来检测缺失的日期时间数据以及数值数据。
+
+7. 指定类型
+
+   - 转化为datetime日期类型
+
+     ```python
+     self.labels_csv['date'] = pd.to_datetime(self.labels_csv['date'], format='%Y/%m/%d')
+     ```
+
+     
+
+   - 直接指定
+
+     ```python
+     self.labels_csv = pd.read_csv(labels_file_path, dtype={'day':int})
+     ```
+
+     
+
+   - 后期转化
+
+     ```python
+     for pot in pots_column_names:
+                 self.labels_csv[pot] = self.labels_csv[pot].astype(float)
+     ```
+
+     
+
+   - 
+
+8. 
 
 
 
@@ -322,7 +384,54 @@
    plt.show()
    ```
 
-5. 
+5. 子图
+
+   ```python
+   import matplotlib.pyplot as plt
+   
+   # 创建一个2x2的子图布局，fig是整个图形，axs是子图轴的数组
+   fig, axs = plt.subplots(2, 2)
+   
+   # 通过索引访问特定的子图来绘制内容
+   axs[0, 0].plot([0, 1], [0, 1]) # 在第一个子图上绘制
+   axs[0, 0].set_title('First Plot') # 设置第一个子图的标题
+   
+   axs[0, 1].plot([0, 1], [1, 0]) # 在第二个子图上绘制
+   axs[0, 1].set_title('Second Plot') # 设置第二个子图的标题
+   
+   axs[1, 0].plot([1, 0], [0, 1]) # 在第三个子图上绘制
+   axs[1, 0].set_title('Third Plot') # 设置第三个子图的标题
+   axs[1, 1].plot([1, 0], [1, 0]) # 在第四个子图上绘制
+   axs[1, 1].set_title('Fourth Plot') # 设置第四个子图的标题
+   
+   # 自动调整子图参数，以给定的填充区域
+   plt.tight_layout()
+   
+   plt.show()
+   ```
+
+   
+
+6. 绘制torch.tensor类型的图片
+
+   ```python
+   import matplotlib.pyplot as plt
+   import torch
+   
+   # 假设img_tensor是你的图片tensor，形状为(C, H, W)
+   # 为了示例，这里创建一个随机的图片tensor
+   img_tensor = torch.rand(3, 128, 128)  # 创建一个随机的RGB图片
+   
+   # 将tensor转换为numpy数组，并调整通道的顺序
+   img_numpy = img_tensor.numpy().transpose(1, 2, 0)
+   
+   # 显示图片
+   plt.imshow(img_numpy)
+   plt.axis('off')  # 不显示坐标轴
+   plt.show()
+   ```
+
+7. 
 
 
 
@@ -343,8 +452,6 @@
    ```
 
    这也可以转灰度
-
-   ``\
 
 3. 融合图片
 
@@ -388,4 +495,53 @@
 
 4. 
 
+
+## dataset
+
+1. 要实现的函数
+
+   - `__len__(self)`
+   - `__getitem__(self, idx)`
+
+2. dataloader
+
+   ```python
+   # 实例化Dataset
+   dataset = CropInfoDataset(data, labels)
    
+   # 实例化DataLoader
+   dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=2)
+   
+   # 使用DataLoader
+   for i, (inputs, labels) in enumerate(dataloader):
+       # 在这里处理你的数据
+       pass
+   ```
+
+   
+
+3. 
+
+
+
+
+
+## 内置函数
+
+1. 判断bool列表全为true
+
+   ```python
+   all(bool_list)
+   ```
+
+   
+
+2. 判断bool列表全为false
+
+   ```python
+   not any(bool_list)
+   ```
+
+   
+
+3. 

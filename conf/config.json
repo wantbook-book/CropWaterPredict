@@ -1,5 +1,8 @@
 {
-    "vgg16": {
+    "rgb_vgg16": {
+        "output_dim": 512
+    },
+    "infrared_vgg16": {
         "output_dim": 512
     },
     "mlp":{
@@ -7,12 +10,30 @@
         "hidden_dim": 128,
         "output_dim": 1
     },
-    "encoder": {
+    "T_moisture_encoder": {
         "input_dim": 3,
         "d_model": 512,
         "nhead": 8, 
         "nhid": 2048, 
         "nlayers": 3, 
         "dropout": 0.1
+    },
+    "sap_flow_encoder": {
+        "input_dim": 2,
+        "d_model": 512,
+        "nhead": 8, 
+        "nhid": 2048, 
+        "nlayers": 3, 
+        "dropout": 0.1
+    },
+    "soil_water_predict_model": {
+        "rgb_vgg16": {
+            "output_dim": 512
+        },
+        "mlp": {
+            "input_dim": 512,
+            "hidden_dim": 128,
+            "output_dim": 1
+        }
     }
 }

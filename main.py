@@ -7,39 +7,172 @@ from dataset.dataset import CropInfoDataset
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch
+from torch.utils.data.dataset import random_split
 import timm
+import numpy as np
+import matplotlib.pyplot as plt
 config = ConfigManager()
 VGG_WEIGHTS_PATH = str(Path(__file__).parent / 'model_weights/vgg16.bin')
 class WaterPredictModel(nn.Module):
     def __init__(self):
         super(WaterPredictModel, self).__init__()
         vgg16_conf = config.get('vgg16')
-        self.vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=vgg16_conf['output_dim'])
-        self.data_config = timm.data.resolve_model_data_config(self.vgg16.model)
+        self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=vgg16_conf['output_dim'])
+        self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
+        self.infrared_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=vgg16_conf['output_dim'])
+
         
-        encoder_conf = config.get('encoder')
+        encoder_conf = config.get('T_moisture_encoder')
         input_dim, d_model, nhead, nhid, nlayers, dropout = \
             encoder_conf['input_dim'], encoder_conf['d_model'], encoder_conf['nhead'],\
                  encoder_conf['nhid'], encoder_conf['nlayers'], encoder_conf['dropout']
-        self.transformer = TransformerEncoder(
+        self.T_moisture_transformer = TransformerEncoder(
+            input_dim=input_dim, d_model=d_model, nhead=nhead, nhid=nhid, nlayers=nlayers, dropout=dropout
+        )
+        encoder_conf = config.get('sap_flow_encoder')
+        input_dim, d_model, nhead, nhid, nlayers, dropout = \
+            encoder_conf['input_dim'], encoder_conf['d_model'], encoder_conf['nhead'],\
+                 encoder_conf['nhid'], encoder_conf['nlayers'], encoder_conf['dropout']
+        self.sap_flow_transformer = TransformerEncoder(
             input_dim=input_dim, d_model=d_model, nhead=nhead, nhid=nhid, nlayers=nlayers, dropout=dropout
         )
         mlp_conf = config.get('mlp')
         input_dim, hidden_dim, output_dim = \
             mlp_conf['input_dim'], mlp_conf['hidden_dim'], mlp_conf['output_dim']
         self.mlp = MLP(input_size=input_dim, hidden_size=hidden_dim, num_classes=output_dim)
-    def get_transformer(self, is_training=False):
+
+    def get_image_transform(self, is_training=False):
         return timm.data.create_transform(**self.data_config, is_training=is_training)
-    def forward(self, image, t_T_data):
-        image_embd = self.vgg16(image)
-        t_T_embd = self.transformer(t_T_data)
+
+    def forward(self, rgb_image, infrared_image, T_moisture_data, sap_flow_data):
+        image_embd = self.rgb_vgg16(rgb_image)
+        infrared_embd = self.infrared_vgg16(infrared_image)
+        t_T_embd = self.T_moisture_transformer(T_moisture_data)
+        sap_flow_embd = self.sap_flow_transformer(sap_flow_data)
+        embd = torch.cat((image_embd, infrared_embd, t_T_embd, sap_flow_embd), dim=1)
         # print(image_embd.shape)
         # print(t_T_embd.shape)
-        embd = torch.cat((image_embd, t_T_embd), dim=1)
         return self.mlp(embd)
 
 
-def train():
+class SoilWaterPredictModel(nn.Module):
+    def __init__(self):
+        super(SoilWaterPredictModel, self).__init__()
+        soil_water_conf = config.get('soil_water_predict_model')
+        self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'])
+        self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
+        self.mlp = MLP(
+            input_size=soil_water_conf['mlp']['input_dim'], 
+            hidden_size=soil_water_conf['mlp']['hidden_dim'], 
+            num_classes=soil_water_conf['mlp']['output_dim']
+        )
+
+    def get_image_transform(self, is_training=False):
+        return timm.data.create_transform(**self.data_config, is_training=is_training)
+
+    def forward(self, rgb_image):
+        image_embd = self.rgb_vgg16(rgb_image)
+        return self.mlp(image_embd)
+
+def evaluate_soil_water_predict_model(model, validation_dataloader, criterion, device):
+    model.eval()  # 将模型设置为评估模式
+    validation_losses = []
+
+    with torch.no_grad():  # 在评估阶段不计算梯度
+        for images, labels, _ in validation_dataloader:
+            images = images.to(device)
+            labels = labels.to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            validation_losses.append(loss.item())
+
+    model.train()  # 将模型设置回训练模式
+    return np.mean(validation_losses)
+
+def train_soil_water_predict_model():
+    num_epochs = 5
+    batch_size = 8
+    lr = 0.001
+    train_ratio = 0.8
+    val_epoches = 1
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = SoilWaterPredictModel()
+    model = model.to(device)
+    model.train()
+    src_dir = Path('./main.py').resolve().parent
+    rgb_image_dir = src_dir / 'data' / 'rgb_images'
+    # infrared_image_dir = src_dir / 'data' / 'thermal_data_processed'
+    T_moisture_data_file_path = src_dir / 'data' / 'series_data' / 'T_moisture_data.csv'
+    # sapflow_data_file_path = src_dir / 'data' / 'series_data' / 'sapflow_data.CSV'
+    labels_file_path = src_dir / 'data' / 'labels' / 'soil_water_content.CSV'
+    dataset = CropInfoDataset(
+            rgb_images_directory=rgb_image_dir, 
+            # infrared_images_directory=infrared_image_dir, 
+            # T_moisture_data_file_path=T_moisture_data_file_path,
+            # sap_flow_data_file_path=sapflow_data_file_path,
+            labels_file_path=labels_file_path,
+            transform=model.get_image_transform(is_training=True)
+        )
+    dataset_size = len(dataset)
+    print('dataset_size:', dataset_size)
+    train_size = int(train_ratio * dataset_size)
+    validation_size = dataset_size - train_size
+    train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+    val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    epoch_losses = []
+    val_losses = []
+    for epoch in range(num_epochs):
+        batch_losses = []
+        for images, labels, _ in train_loader:  # 假设dataloader已准备好
+            images = images.to(device)
+            labels = labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            batch_losses.append(loss.item())
+        epoch_loss = np.mean(batch_losses)
+        epoch_losses.append(epoch_loss)
+        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
+        if (epoch+1) % val_epoches == 0:  # 每10个epoch后在验证集上进行评估
+            validation_loss = evaluate_soil_water_predict_model(model, val_loader, criterion, device)
+            val_losses.append(validation_loss)
+            print(f'After epoch {epoch+1}, Validation Loss: {validation_loss:.4f}')
+    train_results = src_dir/'train_soil_water_predict_model_results'
+    train_results.mkdir(exist_ok=True)
+    new_dir_path = train_results / get_next_subdir_name(train_results)
+    new_dir_path.mkdir(exist_ok=False)
+
+    # 绘制损失曲线
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_epochs+1), epoch_losses, marker='o', linestyle='-', color='b')
+    plt.title('Loss vs. Epoch')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.grid(True)
+    plt.savefig(new_dir_path/'loss_curve.png')
+    plt.clf()
+    plt.plot(range(val_epoches, num_epochs+1, val_epoches), val_losses, marker='o', linestyle='-', color='r')
+    plt.title('Validation Loss vs. Epoch')
+    plt.xlabel('Epoch')
+    plt.ylabel('Validation Loss')
+    plt.grid(True)
+    plt.savefig(new_dir_path/'val_loss_curve.png')
+    # 保存模型
+    torch.save(model.state_dict(), new_dir_path/'soil_water_predict_model.pth')
+    
+def get_next_subdir_name(dir_path: Path)->str:
+    num_dirs = [int(p.name) for p in dir_path.iterdir() if p.is_dir() and p.name.isdigit()]
+    max_num = max(num_dirs) if num_dirs else 0
+    return str(max_num+1)
+
+def train_water_predict_model():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = WaterPredictModel()
     # print(model)
@@ -118,4 +251,4 @@ def validate_model(model, validation_dataloader, device):
 
 
 if __name__ == '__main__':
-    inference()
+    train_soil_water_predict_model()
