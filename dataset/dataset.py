@@ -43,7 +43,6 @@ class CropInfoDataset(Dataset):
         self.labels = []
         self.have_or_nots = []
         self.labels_csv = pd.read_csv(labels_file_path, dtype={'day':int})
-        breakpoint()
         self.labels_csv['date'] = pd.to_datetime(self.labels_csv['date'], format='%Y/%m/%d')
         columns = self.labels_csv.columns.tolist()
         day_index = columns.index('day')

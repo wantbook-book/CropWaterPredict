@@ -96,7 +96,7 @@ def train_soil_water_predict_model():
     batch_size = 8
     lr = 0.001
     train_ratio = 0.8
-    val_epoches = 10
+    val_epoches = 1
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     early_stopping = EarlyStopping(patience=10, verbose=True)
@@ -122,6 +122,7 @@ def train_soil_water_predict_model():
     train_size = int(train_ratio * dataset_size)
     validation_size = dataset_size - train_size
     train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
+    validation_dataset.dataset.transform = model.get_image_transform(is_training=False)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
     val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
