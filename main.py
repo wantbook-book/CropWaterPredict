@@ -61,7 +61,7 @@ class SoilWaterPredictModel(nn.Module):
     def __init__(self):
         super(SoilWaterPredictModel, self).__init__()
         soil_water_conf = config.get('soil_water_predict_model')
-        self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'])
+        self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         self.mlp = MLP(
             input_size=soil_water_conf['mlp']['input_dim'], 
@@ -99,7 +99,7 @@ def train_soil_water_predict_model():
     val_epoches = 5
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    early_stopping = EarlyStopping(patience=10, verbose=True)
+    early_stopping = EarlyStopping(patience=4, verbose=True)
     model = SoilWaterPredictModel()
     model = model.to(device)
     model.train()
@@ -161,14 +161,14 @@ def train_soil_water_predict_model():
 
     # 绘制损失曲线
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, num_epochs+1), epoch_losses, marker='o', linestyle='-', color='b')
+    plt.plot(range(1, len(epoch_losses)), epoch_losses, marker='o', linestyle='-', color='b')
     plt.title('Loss vs. Epoch')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.grid(True)
     plt.savefig(new_dir_path/'loss_curve.png')
     plt.clf()
-    plt.plot(range(val_epoches, num_epochs+1, val_epoches), val_losses, marker='o', linestyle='-', color='r')
+    plt.plot(range(val_epoches, len(val_losses)*val_epoches, val_epoches), val_losses, marker='o', linestyle='-', color='r')
     plt.title('Validation Loss vs. Epoch')
     plt.xlabel('Epoch')
     plt.ylabel('Validation Loss')
