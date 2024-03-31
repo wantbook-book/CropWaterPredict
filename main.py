@@ -92,11 +92,11 @@ def evaluate_soil_water_predict_model(model, validation_dataloader, criterion, d
     return np.mean(validation_losses)
 
 def train_soil_water_predict_model():
-    num_epochs = 2
-    batch_size = 8
+    num_epochs = 300
+    batch_size = 32
     lr = 0.001
     train_ratio = 0.8
-    val_epoches = 10
+    val_epoches = 5
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     early_stopping = EarlyStopping(patience=10, verbose=True)
