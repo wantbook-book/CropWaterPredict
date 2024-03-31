@@ -11,6 +11,8 @@ from torch.utils.data.dataset import random_split
 import timm
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+from utils.early_stopping import EarlyStopping
 config = ConfigManager()
 VGG_WEIGHTS_PATH = str(Path(__file__).parent / 'model_weights/vgg16.bin')
 class WaterPredictModel(nn.Module):
@@ -90,13 +92,14 @@ def evaluate_soil_water_predict_model(model, validation_dataloader, criterion, d
     return np.mean(validation_losses)
 
 def train_soil_water_predict_model():
-    num_epochs = 5
+    num_epochs = 2
     batch_size = 8
     lr = 0.001
     train_ratio = 0.8
-    val_epoches = 1
+    val_epoches = 10
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    early_stopping = EarlyStopping(patience=10, verbose=True)
     model = SoilWaterPredictModel()
     model = model.to(device)
     model.train()
@@ -144,6 +147,12 @@ def train_soil_water_predict_model():
             validation_loss = evaluate_soil_water_predict_model(model, val_loader, criterion, device)
             val_losses.append(validation_loss)
             print(f'After epoch {epoch+1}, Validation Loss: {validation_loss:.4f}')
+            early_stopping(validation_loss)
+            if early_stopping.early_stop:
+                print("Early stopping triggered!")
+                break
+
+        
     train_results = src_dir/'train_soil_water_predict_model_results'
     train_results.mkdir(exist_ok=True)
     new_dir_path = train_results / get_next_subdir_name(train_results)
