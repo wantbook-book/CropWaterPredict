@@ -100,7 +100,15 @@ class CropInfoDataset(Dataset):
                     have_or_not[self.LABEL_DATA] = True
                     self.have_or_nots.append(have_or_not)
                 else:
-                    continue
+                    if self.need_data[self.RGB_IMAGE] and have_or_not[self.RGB_IMAGE]:
+                        self.rgb_images.pop()
+                    if self.need_data[self.INFRARED_IMAGE] and have_or_not[self.INFRARED_IMAGE]:
+                        self.infrared_images.pop()
+                    if self.need_data[self.T_MOISTURE_DATA] and have_or_not[self.T_MOISTURE_DATA]:
+                        self.T_moistures.pop()
+                    if self.need_data[self.SAP_FLOW_DATA] and have_or_not[self.SAP_FLOW_DATA]:
+                        self.sap_flows.pop()
+        
 
     def time_to_seconds(self, dt:datetime)->int:
         return dt.hour*3600 + dt.minute*60 + dt.second
