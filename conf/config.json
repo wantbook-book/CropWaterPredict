@@ -29,7 +29,7 @@
     "soil_water_predict_model": {
         "rgb_vgg16": {
             "output_dim": 512,
-            "finetune": true
+            "finetune": false
         },
         "mlp": {
             "input_dim": 512,
