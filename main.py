@@ -13,7 +13,7 @@ from utils.utils import get_next_subdir_name, save_results
 from models.soil_water_predict import SoilWaterPredictModel
 from models.water_predict_model import WaterPredictModel
 import methods.soil_moisture_predict as smp_methods
-
+from tqdm import tqdm
 def evaluate(
     model: nn.Module, 
     validation_dataloader: DataLoader, 
@@ -24,7 +24,7 @@ def evaluate(
     model.eval()  # 将模型设置为评估模式
     validation_losses = []
     with torch.no_grad():  # 在评估阶段不计算梯度
-        for data in validation_dataloader:
+        for data in tqdm(validation_dataloader, desc='validate'):
             # images = images.to(device)
             # labels = labels.to(device)
             # outputs = model(images)
@@ -70,7 +70,7 @@ def train(
     val_losses = []
     for epoch in range(num_epochs):
         batch_losses = []
-        for data in train_loader:  # 假设dataloader已准备好
+        for data in tqdm(train_loader, desc=f'Epoch {epoch+1}'):  # 假设dataloader已准备好
             # images = images.to(device)
             # labels = labels.to(device)
             # outputs = model(images)
