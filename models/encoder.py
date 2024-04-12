@@ -17,6 +17,9 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0), :]
         return x
 
+# input [n, input_dim]
+# output [n, d_model]
+# n should be less than max_len
 class TransformerEncoder(nn.Module):
     def __init__(self, input_dim, d_model, nhead, nhid, nlayers, dropout=0.5):
         super(TransformerEncoder, self).__init__()

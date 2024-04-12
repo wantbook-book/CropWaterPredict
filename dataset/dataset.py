@@ -172,6 +172,7 @@ class CropInfoDataset(Dataset):
             return_data.append(infrared_image)
         if self.need_data[self.T_MOISTURE_DATA]:
             return_data.append(T_moisture)
+            # return_data.append(torch.tensor([[0,0], [0,0], [0,0]], dtype=torch.float32))
         if self.need_data[self.SAP_FLOW_DATA]:
             return_data.append(sapflow)
         if self.need_data[self.LABEL_DATA]:

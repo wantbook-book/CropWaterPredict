@@ -27,14 +27,35 @@
         "dropout": 0.1
     },
     "soil_water_predict_model": {
-        "rgb_vgg16": {
-            "output_dim": 512,
-            "finetune": false
+        "rgb":{
+            "rgb_vgg16": {
+                "output_dim": 512,
+                "finetune": false
+            },
+            "mlp": {
+                "input_dim": 512,
+                "hidden_dim": 128,
+                "output_dim": 1
+            }
         },
-        "mlp": {
-            "input_dim": 512,
-            "hidden_dim": 128,
-            "output_dim": 1
+        "rgb_tm":{
+            "rgb_vgg16": {
+                "output_dim": 512,
+                "finetune": false
+            },
+            "T_moisture_encoder": {
+                "input_dim": 3,
+                "d_model": 512,
+                "nhead": 8, 
+                "nhid": 2048, 
+                "nlayers": 3, 
+                "dropout": 0.1
+            },
+            "mlp": {
+                "input_dim": 1024,
+                "hidden_dim": 128,
+                "output_dim": 1
+            }
         }
     }
 }

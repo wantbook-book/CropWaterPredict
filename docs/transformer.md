@@ -12,6 +12,8 @@ https://zhuanlan.zhihu.com/p/338817680
 
 ![img](transformer/v2-6444601b4c41d99e70569b0ea388c3bd_720w.png)
 
+![img](transformer/v2-9699a37b96c2b62d22b312b5e1863acd_720w.png)
+
 多头就是使用多组权重矩阵，做上面的操作
 
 ![img](transformer/v2-35d78d9aa9150ae4babd0ea6aa68d113_720w.png)

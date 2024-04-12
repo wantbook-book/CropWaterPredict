@@ -8,10 +8,10 @@ import timm
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from typing import Callable
 from utils.early_stopping import EarlyStopping
 from utils.utils import get_next_subdir_name, save_results
-from models.soil_water_predict import SoilWaterPredictModel
-from models.water_predict_model import WaterPredictModel
+import models.soil_moisture_predict as smp_models
 import methods.soil_moisture_predict as smp_methods
 from tqdm import tqdm
 def evaluate(
@@ -35,12 +35,14 @@ def evaluate(
     model.train()  # 将模型设置回训练模式
     return np.mean(validation_losses)
 
+
 def train(
     model: nn.Module,
     device: torch.device,
     dataset: Dataset,
     results_dir: Path,
-    output_func: callable,
+    collate_fn: Callable,
+    output_func: Callable,
     num_epochs: int = 300,
     batch_size: int = 32,
     lr: float = 0.001,
@@ -62,8 +64,8 @@ def train(
     validation_size = dataset_size - train_size
     train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
     validation_dataset.dataset.transform = model.get_image_transform(is_training=False)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
-    val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1, collate_fn=collate_fn)
+    val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=collate_fn)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     train_losses = []
@@ -120,15 +122,24 @@ def train(
 
 if __name__ == '__main__':
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    model = SoilWaterPredictModel()
+
+    # model = smp_models.RGB_Model()
+    model = smp_models.RGB_TM_Model()
+
     src_dir = Path('./main.py').resolve().parent
     rgb_image_dir = src_dir / 'data' / 'rgb_images'
     infrared_image_dir = src_dir / 'data' / 'thermal_data_processed'
     T_moisture_data_file_path = src_dir / 'data' / 'series_data' / 'T_moisture_data.csv'
     sapflow_data_file_path = src_dir / 'data' / 'series_data' / 'sapflow_data.CSV'
     labels_file_path = src_dir / 'data' / 'labels' / 'soil_water_content.CSV'
-    dataset = smp_methods.rgb_dataset(
+    # dataset = smp_methods.rgb_dataset(
+    #     rgb_images_dir=rgb_image_dir,
+    #     labels_file_path=labels_file_path,
+    #     transform=model.get_image_transform(is_training=True)
+    # )
+    dataset = smp_methods.rgb_TM_dataset(
         rgb_images_dir=rgb_image_dir,
+        T_moisture_data_file_path=T_moisture_data_file_path,
         labels_file_path=labels_file_path,
         transform=model.get_image_transform(is_training=True)
     )
@@ -137,14 +148,16 @@ if __name__ == '__main__':
         device=device,
         dataset=dataset,
         results_dir=src_dir / 'train' /'soil_moisture_predict' / 'rgb',
-        num_epochs=1,
+        num_epochs=2,
         batch_size=32,
         lr=0.001,
         train_ratio=0.8,
         val_epoches=1,
         patience=4,
-        draw_skip_epoches=0,
-        output_func=smp_methods.rgb_output
+        draw_skip_epoches=1,
+        # output_func=smp_methods.rgb_output
+        output_func=smp_methods.rgb_and_TM_output,
+        collate_fn=smp_methods.rgb_TM_collate_fn
     )
 
     
