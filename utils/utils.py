@@ -16,6 +16,8 @@ def save_results(
     # skip epoches for drawing loss curve
     skip_epoches: int = 5,
 ):
+    train_org_len = len(train_losses)
+    val_org_len = len(val_losses)
     with open(output_dir/'train_losses.txt', 'w') as f:
         for i in range(len(train_losses)):
             f.write(f'{i+1}: {train_losses[i]}\n')
@@ -25,14 +27,14 @@ def save_results(
     train_losses = train_losses[skip_epoches:]
     val_losses = val_losses[skip_epoches//val_epoches:]
     plt.figure(figsize=(10, 6))
-    plt.plot(range(skip_epoches+1, len(train_losses)+1), train_losses, marker='o', linestyle='-', color='b')
+    plt.plot(range(skip_epoches+1, train_org_len+1), train_losses, marker='o', linestyle='-', color='b')
     plt.title('Loss vs. Epoch')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     # plt.grid(True)
     # plt.savefig(new_dir_path/'loss_curve.png')
     # plt.clf()
-    plt.plot(range(val_epoches*(skip_epoches//val_epoches+1), (len(val_losses)+1)*val_epoches, val_epoches), val_losses, marker='o', linestyle='-', color='r')
+    plt.plot(range(val_epoches*(skip_epoches//val_epoches+1), (val_org_len+1)*val_epoches, val_epoches), val_losses, marker='o', linestyle='-', color='r')
     # plt.title('Validation Loss vs. Epoch')
     # plt.xlabel('Epoch')
     # plt.ylabel('Validation Loss')
