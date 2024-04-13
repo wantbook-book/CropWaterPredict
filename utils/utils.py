@@ -27,14 +27,14 @@ def save_results(
     train_losses = train_losses[skip_epoches:]
     val_losses = val_losses[skip_epoches//val_epoches:]
     plt.figure(figsize=(10, 6))
-    plt.plot(range(skip_epoches+1, train_org_len+1), train_losses, marker='o', linestyle='-', color='b')
+    plt.plot(range(skip_epoches+1, train_org_len+1), train_losses, marker='', linestyle='-', color='b')
     plt.title('Loss vs. Epoch')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     # plt.grid(True)
     # plt.savefig(new_dir_path/'loss_curve.png')
     # plt.clf()
-    plt.plot(range(val_epoches*(skip_epoches//val_epoches+1), (val_org_len+1)*val_epoches, val_epoches), val_losses, marker='o', linestyle='-', color='r')
+    plt.plot(range(val_epoches*(skip_epoches//val_epoches+1), (val_org_len+1)*val_epoches, val_epoches), val_losses, marker='', linestyle='-', color='r')
     # plt.title('Validation Loss vs. Epoch')
     # plt.xlabel('Epoch')
     # plt.ylabel('Validation Loss')
