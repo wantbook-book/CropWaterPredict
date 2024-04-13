@@ -41,8 +41,8 @@ def train(
     device: torch.device,
     dataset: Dataset,
     results_dir: Path,
-    collate_fn: Callable,
     output_func: Callable,
+    collate_fn: Callable=None,
     num_epochs: int = 300,
     batch_size: int = 32,
     lr: float = 0.001,
@@ -64,8 +64,12 @@ def train(
     validation_size = dataset_size - train_size
     train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
     validation_dataset.dataset.transform = model.get_image_transform(is_training=False)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1, collate_fn=collate_fn)
-    val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=collate_fn)
+    if collate_fn is None:
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
+        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
+    else:
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1, collate_fn=collate_fn)
+        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=collate_fn)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     train_losses = []
