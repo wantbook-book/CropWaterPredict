@@ -32,9 +32,13 @@
                 "output_dim": 512,
                 "finetune": false
             },
+            "rgb_resnet18": {
+                "output_dim": 512,
+                "finetune": true
+            },
             "mlp": {
                 "input_dim": 512,
-                "hidden_dim": 128,
+                "hidden_dim": 256,
                 "output_dim": 1
             }
         },
@@ -51,9 +55,18 @@
                 "nlayers": 3, 
                 "dropout": 0.1
             },
+            "rgb_resnet18": {
+                "output_dim": 512,
+                "finetune": false
+            },
+            "tm_mlp":{
+                "input_dim": 3,
+                "hidden_dim": 256,
+                "output_dim": 128
+            },
             "mlp": {
-                "input_dim": 1024,
-                "hidden_dim": 128,
+                "input_dim": 640,
+                "hidden_dim": 256,
                 "output_dim": 1
             }
         }
