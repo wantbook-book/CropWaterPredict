@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 import os
 from PIL import Image
@@ -25,9 +25,11 @@ class CropInfoDataset(Dataset):
             rgb_images_directory:Path=None, 
             infrared_images_directory:Path=None, 
             T_moisture_data_file_path:Path=None,
+            T_moisture_number_per_day:int=48,
             sap_flow_data_file_path:Path=None,
             transform=None
         ):
+        self.T_mositure_number_per_day = T_moisture_number_per_day
         self.need_data = [
             rgb_images_directory is not None,
             infrared_images_directory is not None,
@@ -119,8 +121,11 @@ class CropInfoDataset(Dataset):
             T_mositure_day = (row['time'] - base_time).days
             if abs(T_mositure_day-day) <= self.T_MOISTURE_DELTA_DAY:
                 T_mositure.append([T_mositure_day*self.DAY_SECONDS+self.time_to_seconds(row['time']), float(row['temp']), row['moisture']])
+        
         if len(T_mositure) == 0:
             return None
+        if len(T_mositure) < (2*self.T_MOISTURE_DELTA_DAY+1)*self.T_mositure_number_per_day:
+            T_mositure = T_mositure + [[0,0,0]]*((2*self.T_MOISTURE_DELTA_DAY+1)*self.T_mositure_number_per_day-len(T_mositure))
         return T_mositure
 
     def get_sap_flow_by_day_and_pot(self, base_time:datetime, day:int, pot:str)->list[list[float]]:
@@ -179,6 +184,7 @@ class CropInfoDataset(Dataset):
             return_data.append(label)
         return_data.append(have_or_not)
         return return_data
+
 
 if __name__ == '__main__':
     dataset = CropInfoDataset('preprocess/rgb_images_list.json', 'preprocess/t_T_mo_data.json', transform=ToTensor())

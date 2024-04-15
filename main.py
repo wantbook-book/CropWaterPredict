@@ -1,6 +1,6 @@
 from pathlib import Path
 from dataset.dataset import CropInfoDataset
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Subset
 import torch.nn as nn
 import torch
 from torch.utils.data.dataset import random_split
@@ -39,14 +39,14 @@ def evaluate(
 def train(
     model: nn.Module,
     device: torch.device,
-    dataset: Dataset,
+    train_dataset: Dataset,
+    validation_dataset: Dataset,
     results_dir: Path,
     output_func: Callable,
     collate_fn: Callable=None,
     num_epochs: int = 300,
     batch_size: int = 32,
     lr: float = 0.001,
-    train_ratio: float = 0.8,
     val_epoches: int = 5,
     patience: int = 4,
     draw_skip_epoches: int = 6,
@@ -59,11 +59,6 @@ def train(
     model = model.to(device)
     model.train()
     
-    dataset_size = len(dataset)
-    train_size = int(train_ratio * dataset_size)
-    validation_size = dataset_size - train_size
-    train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
-    validation_dataset.dataset.transform = model.get_image_transform(is_training=False)
     if collate_fn is None:
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
         val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
@@ -101,7 +96,7 @@ def train(
             print(f'After epoch {epoch+1}, Validation Loss: {validation_loss:.4f}')
             early_stopping(validation_loss)
             if early_stopping.early_stop:
-                print("Early stopping triggered!")
+                print("Early stopping triggered! Best validation loss:", early_stopping.best_score)
                 break
 
     save_results(
@@ -125,10 +120,11 @@ def train(
 
 
 if __name__ == '__main__':
+    TRAIN_RATIO = 0.8
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    # model = smp_models.RGB_Model()
-    model = smp_models.RGB_TM_Model()
+    model = smp_models.RGB_Model()
+    # model = smp_models.RGB_TM_Model()
 
     src_dir = Path('./main.py').resolve().parent
     rgb_image_dir = src_dir / 'data' / 'rgb_images'
@@ -136,32 +132,43 @@ if __name__ == '__main__':
     T_moisture_data_file_path = src_dir / 'data' / 'series_data' / 'T_moisture_data.csv'
     sapflow_data_file_path = src_dir / 'data' / 'series_data' / 'sapflow_data.CSV'
     labels_file_path = src_dir / 'data' / 'labels' / 'soil_water_content.CSV'
-    # dataset = smp_methods.rgb_dataset(
-    #     rgb_images_dir=rgb_image_dir,
-    #     labels_file_path=labels_file_path,
-    #     transform=model.get_image_transform(is_training=True)
-    # )
-    dataset = smp_methods.rgb_TM_dataset(
+
+    train_dataset = smp_methods.rgb_dataset(
         rgb_images_dir=rgb_image_dir,
-        T_moisture_data_file_path=T_moisture_data_file_path,
         labels_file_path=labels_file_path,
         transform=model.get_image_transform(is_training=True)
     )
+    validation_dataset = smp_methods.rgb_dataset(
+        rgb_images_dir=rgb_image_dir,
+        labels_file_path=labels_file_path,
+        transform=model.get_image_transform(is_training=False)
+    )
+    total_size = len(train_dataset)
+    train_size = int(total_size * TRAIN_RATIO)
+    indices = np.random.permutation(total_size)
+    train_dataset = Subset(train_dataset, indices[:train_size])
+    validation_dataset = Subset(validation_dataset, indices[train_size:])
+    # dataset = smp_methods.rgb_TM_dataset(
+    #     rgb_images_dir=rgb_image_dir,
+    #     T_moisture_data_file_path=T_moisture_data_file_path,
+    #     labels_file_path=labels_file_path,
+    #     transform=model.get_image_transform(is_training=True)
+    # )
     train(
         model=model,
         device=device,
-        dataset=dataset,
+        train_dataset=train_dataset,
+        validation_dataset=validation_dataset,
         results_dir=src_dir / 'train' /'soil_moisture_predict' / 'rgb',
         num_epochs=2,
         batch_size=32,
         lr=0.001,
-        train_ratio=0.8,
         val_epoches=1,
         patience=4,
         draw_skip_epoches=1,
-        # output_func=smp_methods.rgb_output
-        output_func=smp_methods.rgb_and_TM_output,
-        collate_fn=smp_methods.rgb_TM_collate_fn
+        output_func=smp_methods.rgb_output
+        # output_func=smp_methods.rgb_and_TM_output,
+        # collate_fn=smp_methods.rgb_TM_collate_fn
     )
 
     
