@@ -127,8 +127,8 @@ if __name__ == '__main__':
     TRAIN_RATIO = 0.8
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    # model = smp_models.RGB_Model()
-    model = smp_models.RGB_TM_Model()
+    model = smp_models.RGB_Model()
+    # model = smp_models.RGB_TM_Model()
 
     src_dir = Path('./main.py').resolve().parent
     rgb_image_dir = src_dir / 'data' / 'rgb_images'
@@ -137,28 +137,28 @@ if __name__ == '__main__':
     sapflow_data_file_path = src_dir / 'data' / 'series_data' / 'sapflow_data.CSV'
     labels_file_path = src_dir / 'data' / 'labels' / 'soil_water_content.CSV'
 
-    # train_dataset = smp_methods.rgb_dataset(
-    #     rgb_images_dir=rgb_image_dir,
-    #     labels_file_path=labels_file_path,
-    #     transform=model.get_image_transform(is_training=True)
-    # )
-    # validation_dataset = smp_methods.rgb_dataset(
-    #     rgb_images_dir=rgb_image_dir,
-    #     labels_file_path=labels_file_path,
-    #     transform=model.get_image_transform(is_training=False)
-    # )
-    train_dataset = smp_methods.rgb_TM_dataset(
+    train_dataset = smp_methods.rgb_dataset(
         rgb_images_dir=rgb_image_dir,
-        T_moisture_data_file_path=T_moisture_data_file_path,
         labels_file_path=labels_file_path,
         transform=model.get_image_transform(is_training=True)
     )
-    validation_dataset = smp_methods.rgb_TM_dataset(
+    validation_dataset = smp_methods.rgb_dataset(
         rgb_images_dir=rgb_image_dir,
-        T_moisture_data_file_path=T_moisture_data_file_path,
         labels_file_path=labels_file_path,
         transform=model.get_image_transform(is_training=False)
     )
+    # train_dataset = smp_methods.rgb_TM_dataset(
+    #     rgb_images_dir=rgb_image_dir,
+    #     T_moisture_data_file_path=T_moisture_data_file_path,
+    #     labels_file_path=labels_file_path,
+    #     transform=model.get_image_transform(is_training=True)
+    # )
+    # validation_dataset = smp_methods.rgb_TM_dataset(
+    #     rgb_images_dir=rgb_image_dir,
+    #     T_moisture_data_file_path=T_moisture_data_file_path,
+    #     labels_file_path=labels_file_path,
+    #     transform=model.get_image_transform(is_training=False)
+    # )
     total_size = len(train_dataset)
     print('dataset size:', total_size)
     train_size = int(total_size * TRAIN_RATIO)
@@ -171,14 +171,15 @@ if __name__ == '__main__':
         train_dataset=train_dataset,
         validation_dataset=validation_dataset,
         results_dir=src_dir / 'train' /'soil_moisture_predict' / 'rgb',
-        num_epochs=2,
+        # results_dir=src_dir / 'train' /'soil_moisture_predict' / 'rgb_tm',
+        num_epochs=300,
         batch_size=32,
         lr=0.001,
-        val_epoches=1,
-        patience=4,
-        draw_skip_epoches=1,
-        # output_func=smp_methods.rgb_output
-        output_func=smp_methods.rgb_and_TM_output,
+        val_epoches=2,
+        patience=10,
+        draw_skip_epoches=0,
+        output_func=smp_methods.rgb_output
+        # output_func=smp_methods.rgb_and_TM_output,
         # collate_fn=smp_methods.rgb_TM_collate_fn
     )
 
