@@ -125,10 +125,10 @@ class RGB_TM_Model(nn.Module):
         T_moisture = T_moisture.transpose(1,2)
         # tm_embd: [B, mlp_output_dim*3]
         tm_embd = self.tm_mlp(T_moisture)
-        # tm_embd = tm_embd.flatten(1)
+        tm_embd = tm_embd.flatten(1)
         # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
         # 不确定要不要归一化
-        tm_embd = torch.sum(tm_embd, dim=1)
+        # tm_embd = torch.sum(tm_embd, dim=1)
         # breakpoint()
         embd = torch.cat([image_embd, tm_embd], dim=1)
         return self.final_mlp(embd)
