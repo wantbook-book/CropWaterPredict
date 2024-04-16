@@ -14,6 +14,7 @@ from utils.early_stopping import EarlyStopping
 from utils.utils import get_next_subdir_name, save_results
 import models.soil_moisture_predict as smp_models
 import methods.soil_moisture_predict as smp_methods
+from torch.optim.lr_scheduler import StepLR, ExponentialLR, CosineAnnealingLR, _LRScheduler
 from tqdm import tqdm
 def evaluate(
     model: nn.Module, 
@@ -69,6 +70,9 @@ def train(
         val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=collate_fn)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    # adjust learning rates
+    scheduler = StepLR(optimizer, step_size=20, gamma=0.1)
+
     train_losses = []
     val_losses = []
     for epoch in range(num_epochs):
@@ -82,6 +86,7 @@ def train(
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
+            scheduler.step()
             batch_losses.append(loss.item())
         train_loss = np.mean(batch_losses)
         train_losses.append(train_loss)
@@ -174,7 +179,7 @@ if __name__ == '__main__':
         # results_dir=src_dir / 'train' /'soil_moisture_predict' / 'rgb_tm',
         num_epochs=300,
         batch_size=32,
-        lr=0.001,
+        lr=0.05,
         val_epoches=2,
         patience=10,
         draw_skip_epoches=0,
