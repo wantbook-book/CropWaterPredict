@@ -88,6 +88,7 @@ def train(
             optimizer.step()
             scheduler.step()
             batch_losses.append(loss.item())
+            writer.add_graph(model, data)
         train_loss = np.mean(batch_losses)
         train_losses.append(train_loss)
         writer.add_scalar('Loss/train', train_loss, epoch)
