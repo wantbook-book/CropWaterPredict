@@ -66,7 +66,7 @@ class RgbVgg16Model(nn.Module):
         super(RgbVgg16Model, self).__init__()
         soil_water_conf = config.get('soil_water_predict_model')['rgb']
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
-        # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
+        self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         # self.rgb_resnet18 = ResNet(
         #     block=BasicBlock,
         #     layers=[2,2,2,2],
