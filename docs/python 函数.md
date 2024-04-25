@@ -202,7 +202,21 @@
 
    - 
 
-8. 
+8. 获取行数列数
+
+   - `pd.shape`
+
+9. 增加列、删除列、更改索引
+
+   ```python
+   sapflow_file['datetime'] = pd.to_datetime(sapflow_file['date'] + ' ' + sapflow_file['time'])
+   sapflow_file = sapflow_file.drop(columns=['date', 'time'])
+   sapflow_file = sapflow_file.set_index('datetime')
+   ```
+
+   
+
+10. 
 
 
 
