@@ -52,6 +52,7 @@ def train(
     val_epoches: int = 5,
     patience: int = 4,
     draw_skip_epoches: int = 0,
+    num_workers:int = 8
 ):
     results_dir.mkdir(exist_ok=True, parents=True)
     new_dir_path = results_dir / get_next_subdir_name(results_dir)
@@ -63,15 +64,15 @@ def train(
     model.train()
     
     if collate_fn is None:
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1)
-        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     else:
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1, collate_fn=collate_fn)
-        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=collate_fn)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, collate_fn=collate_fn)
+        val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     # adjust learning rates
-    scheduler = StepLR(optimizer, step_size=20, gamma=0.1)
+    # scheduler = StepLR(optimizer, step_size=20, gamma=0.1)
 
     train_losses = []
     val_losses = []
@@ -86,7 +87,7 @@ def train(
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            # scheduler.step()
             batch_losses.append(loss.item())
         train_loss = np.mean(batch_losses)
         train_losses.append(train_loss)
@@ -108,6 +109,15 @@ def train(
                 print("Early stopping triggered! Best validation loss:", early_stopping.best_score)
                 break
     writer.close()
+    with open(new_dir_path / 'hyper_parameters.txt', 'w') as f:
+        f.write(f'num_epochs: {num_epochs}\n')
+        f.write(f'batch_size: {batch_size}\n')
+        f.write(f'lr: {lr}\n')
+        f.write(f'patience: {patience}\n')
+        f.write(f'num_workers: {num_workers}\n')
+        f.write(f'val_epochs: {val_epoches}\n')
+
+    model.output_net_settings(new_dir_path)
     save_results(
         model=model,
         train_losses=train_losses,

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sys
+import torch
 from pathlib import Path
 from segment_anything import sam_model_registry, SamPredictor
 IMAGE_SUFFIXES = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']
@@ -21,7 +22,7 @@ def resize(image):
     target_height = int(original_height * scale_factor)
     # 使用计算出的新尺寸对图像进行缩放
     return cv2.resize(image, (target_width, target_height), interpolation=cv2.INTER_AREA)
-def process(image_file: Path, output_dir: Path, predictor):
+def process(image_file: Path, output_dir: Path, predictor, device):
     global image, input_points, input_labels
     image_org = cv2.imread(str(image_file))
     image_org = resize(image_org)
@@ -135,8 +136,9 @@ if __name__ == '__main__':
     sam_checkpoint = "weights/sam_vit_h_4b8939.pth"
     model_type = "vit_h"
     # device = "cuda"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-    # sam.to(device=device)
+    sam.to(device=device)
     predictor = SamPredictor(sam)
 
     for path in images_dir.iterdir():
@@ -154,4 +156,4 @@ if __name__ == '__main__':
                 if image_file.is_file():
                     if image_file.suffix.lower() in IMAGE_SUFFIXES:
                         print('process image:', image_file)
-                        process(image_file, output_dir=subdir_path, predictor=predictor)
+                        process(image_file, output_dir=subdir_path, predictor=predictor, device=device)

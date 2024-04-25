@@ -2,6 +2,26 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch
+from torch.nn import functional as F
+def act(act_name, x):
+    if act_name == 'relu':
+        return F.relu(x)
+    elif act_name == 'gelu':
+        return F.quick_gelu(x)
+    elif act_name == 'none':
+        return x
+    else:
+        raise NotImplementedError(act_name)
+    
+def parse_dtype(x):
+    if isinstance(x, torch.dtype):
+        return x
+    elif isinstance(x, str):
+        if x == 'float32' or x == 'float':
+            return torch.float32
+        else:
+            pass
+        
 def get_next_subdir_name(dir_path: Path)->str:
     num_dirs = [int(p.name) for p in dir_path.iterdir() if p.is_dir() and p.name.isdigit()]
     max_num = max(num_dirs) if num_dirs else 0

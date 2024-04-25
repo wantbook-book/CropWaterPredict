@@ -1,9 +1,12 @@
+import functools
+from utils.utils import act 
 from models.vgg16 import VGG16
 from models.mlp import MLP
 from models.encoder import TransformerEncoder
 from models.resnet import ResNet, BasicBlock
 from utils.config_manager import ConfigManager
 from pathlib import Path
+import json
 import torch.nn as nn
 import torch
 import timm
@@ -15,6 +18,18 @@ class RgbResNet18Model(nn.Module):
     def __init__(self):
         super(RgbResNet18Model, self).__init__()
         config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['rgb']
+        self.net_settings = {}
+        self.net_settings['rgb_resnet18'] = {
+            'output_dim': config['rgb_resnet18']['output_dim'],
+            'finetune': config['rgb_resnet18']['finetune']
+        }
+        self.net_settings['mlp'] = {
+            'input_dim': config['mlp']['input_dim'], 
+            'hidden_dim': config['mlp']['hidden_dim'], 
+            'output_dim': config['mlp']['output_dim'],
+            'nhidlayer': config['mlp']['nhidlayer'],
+            'hidactive': config['mlp']['hidactive'],
+        }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         self.rgb_resnet18 = ResNet(
@@ -23,6 +38,7 @@ class RgbResNet18Model(nn.Module):
             num_classes=config['rgb_resnet18']['output_dim']
             # num_classes=1000
         )
+
         # self.rgb_resnet18.fc = nn.Linear(self.rgb_resnet18.fc.in_features, soil_water_conf['rgb_resnet18']['output_dim'])
         if config['rgb_resnet18']['finetune']:
             state_dict = torch.load(RESNET18_WEIGHTS_PATH)
@@ -30,10 +46,13 @@ class RgbResNet18Model(nn.Module):
             state_dict.pop('fc.bias', None)
             self.rgb_resnet18.load_state_dict(state_dict, strict=False)
         self.final_mlp = MLP(
-            input_size=config['mlp']['input_dim'], 
-            hidden_size=config['mlp']['hidden_dim'], 
-            num_classes=config['mlp']['output_dim']
+            insize=config['mlp']['input_dim'], 
+            hidsize=config['mlp']['hidden_dim'], 
+            outsize=config['mlp']['output_dim'],
+            nhidlayer=config['mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
+
 
     def get_image_transform(self, is_training=False):
         # return timm.data.create_transform(**self.data_config, is_training=is_training)
@@ -59,12 +78,28 @@ class RgbResNet18Model(nn.Module):
     def forward(self, rgb_image):
         image_embd = self.rgb_resnet18(rgb_image)
         return self.final_mlp(image_embd)
+    
+    def output_net_settings(self, output_dir:Path):
+        with open(output_dir/'net_settings.json', 'w') as f:
+            json.dump(self.net_settings, f, indent=4)
 
 
 class RgbVgg16Model(nn.Module):
     def __init__(self):
         super(RgbVgg16Model, self).__init__()
         config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['rgb']
+        self.net_settings = {}
+        self.net_settings['rgb_vgg16'] = {
+            'output_dim': config['rgb_vgg16']['output_dim'],
+            'finetune': config['rgb_vgg16']['finetune']
+        }
+        self.net_settings['mlp'] = {
+            'input_dim': config['mlp']['input_dim'], 
+            'hidden_dim': config['mlp']['hidden_dim'], 
+            'output_dim': config['mlp']['output_dim'],
+            'nhidlayer': config['mlp']['nhidlayer'],
+            'hidactive': config['mlp']['hidactive'],
+        }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         # self.rgb_resnet18 = ResNet(
@@ -80,9 +115,11 @@ class RgbVgg16Model(nn.Module):
         #     state_dict.pop('fc.bias', None)
         #     self.rgb_resnet18.load_state_dict(state_dict, strict=False)
         self.final_mlp = MLP(
-            input_size=config['mlp']['input_dim'], 
-            hidden_size=config['mlp']['hidden_dim'], 
-            num_classes=config['mlp']['output_dim']
+            insize=config['mlp']['input_dim'], 
+            hidsize=config['mlp']['hidden_dim'], 
+            outsize=config['mlp']['output_dim'],
+            nhidlayer=config['mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
 
     def get_image_transform(self, is_training=False):
@@ -109,11 +146,35 @@ class RgbVgg16Model(nn.Module):
     def forward(self, rgb_image):
         image_embd = self.rgb_vgg16(rgb_image)
         return self.final_mlp(image_embd)
+    
+    def output_net_settings(self, output_dir:Path):
+        with open(output_dir/'net_settings.json', 'w') as f:
+            json.dump(self.net_settings, f, indent=4)
 
 class RgbResNet18TmModel(nn.Module):
     def __init__(self):
         super(RgbResNet18TmModel, self).__init__()
         config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['rgb_tm']
+        self.net_settings = {}
+        self.net_settings['rgb_resnet18'] = {
+            'output_dim': config['rgb_resnet18']['output_dim'],
+            'finetune': config['rgb_resnet18']['finetune']
+        }
+        self.net_settings['tm_mlp'] = {
+            'input_dim': config['tm_mlp']['input_dim'], 
+            'hidden_dim': config['tm_mlp']['hidden_dim'], 
+            'output_dim': config['tm_mlp']['output_dim'],
+            'nhidlayer': config['tm_mlp']['nhidlayer'],
+            'hidactive': config['tm_mlp']['hidactive'],
+        }
+        
+        self.net_settings['mlp'] = {
+            'input_dim': config['mlp']['input_dim'], 
+            'hidden_dim': config['mlp']['hidden_dim'], 
+            'output_dim': config['mlp']['output_dim'],
+            'nhidlayer': config['mlp']['nhidlayer'],
+            'hidactive': config['mlp']['hidactive'],
+        }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
         #     input_dim=soil_water_conf['T_moisture_encoder']['input_dim'], 
@@ -135,14 +196,18 @@ class RgbResNet18TmModel(nn.Module):
             state_dict.pop('fc.bias', None)
             self.rgb_resnet18.load_state_dict(state_dict, strict=False)
         self.tm_mlp = MLP(
-            input_size=config['tm_mlp']['input_dim'], 
-            hidden_size=config['tm_mlp']['hidden_dim'], 
-            num_classes=config['tm_mlp']['output_dim']
+            insize=config['tm_mlp']['input_dim'], 
+            hidsize=config['tm_mlp']['hidden_dim'], 
+            outsize=config['tm_mlp']['output_dim'],
+            nhidlayer=config['tm_mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['tm_mlp']['hidactive']),
         )
         self.final_mlp = MLP(
-            input_size=config['mlp']['input_dim'], 
-            hidden_size=config['mlp']['hidden_dim'], 
-            num_classes=config['mlp']['output_dim']
+            insize=config['mlp']['input_dim'], 
+            hidsize=config['mlp']['hidden_dim'], 
+            outsize=config['mlp']['output_dim'],
+            nhidlayer=config['mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         
@@ -184,12 +249,36 @@ class RgbResNet18TmModel(nn.Module):
         # breakpoint()
         embd = torch.cat([image_embd, tm_embd], dim=1)
         return self.final_mlp(embd)
+    
+    def output_net_settings(self, output_dir:Path):
+        with open(output_dir/'net_settings.json', 'w') as f:
+            json.dump(self.net_settings, f, indent=4)
 
 
 class RgbVgg16TmModel(nn.Module):
     def __init__(self):
         super(RgbVgg16TmModel, self).__init__()
         config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['rgb_tm']
+        self.net_settings = {}
+        self.net_settings['rgb_vgg16'] = {
+            'output_dim': config['rgb_vgg16']['output_dim'],
+            'finetune': config['rgb_vgg16']['finetune']
+        }
+        self.net_settings['tm_mlp'] = {
+            'input_dim': config['tm_mlp']['input_dim'], 
+            'hidden_dim': config['tm_mlp']['hidden_dim'], 
+            'output_dim': config['tm_mlp']['output_dim'],
+            'nhidlayer': config['tm_mlp']['nhidlayer'],
+            'hidactive': config['tm_mlp']['hidactive'],
+        }
+        
+        self.net_settings['mlp'] = {
+            'input_dim': config['mlp']['input_dim'], 
+            'hidden_dim': config['mlp']['hidden_dim'], 
+            'output_dim': config['mlp']['output_dim'],
+            'nhidlayer': config['mlp']['nhidlayer'],
+            'hidactive': config['mlp']['hidactive'],
+        }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
         #     input_dim=soil_water_conf['T_moisture_encoder']['input_dim'], 
@@ -211,14 +300,18 @@ class RgbVgg16TmModel(nn.Module):
         #     state_dict.pop('fc.bias', None)
         #     self.rgb_resnet18.load_state_dict(state_dict, strict=False)
         self.tm_mlp = MLP(
-            input_size=config['tm_mlp']['input_dim'], 
-            hidden_size=config['tm_mlp']['hidden_dim'], 
-            num_classes=config['tm_mlp']['output_dim']
+            insize=config['tm_mlp']['input_dim'], 
+            hidsize=config['tm_mlp']['hidden_dim'], 
+            outsize=config['tm_mlp']['output_dim'],
+            nhidlayer=config['tm_mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['tm_mlp']['hidactive']),
         )
         self.final_mlp = MLP(
-            input_size=config['mlp']['input_dim'], 
-            hidden_size=config['mlp']['hidden_dim'], 
-            num_classes=config['mlp']['output_dim']
+            insize=config['mlp']['input_dim'], 
+            hidsize=config['mlp']['hidden_dim'], 
+            outsize=config['mlp']['output_dim'],
+            nhidlayer=config['mlp']['nhidlayer'],
+            hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
         
@@ -261,3 +354,7 @@ class RgbVgg16TmModel(nn.Module):
         # breakpoint()
         embd = torch.cat([image_embd, tm_embd], dim=1)
         return self.final_mlp(embd)
+    
+    def output_net_settings(self, output_dir:Path):
+        with open(output_dir/'net_settings.json', 'w') as f:
+            json.dump(self.net_settings, f, indent=4)

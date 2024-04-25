@@ -15,7 +15,8 @@ def rgb_vgg16_train(
     batch_size: int = 32,
     lr: float = 0.01,
     val_epochs: int = 2,
-    patience: int = 10
+    patience: int = 10,
+    num_workers: int = 8
 ):
     model = sfp_models.RgbVgg16Model()
     train_dataset = sfp_datasets.RgbDataset(
@@ -45,7 +46,8 @@ def rgb_vgg16_train(
         lr=lr,
         val_epoches=val_epochs,
         patience=patience,
-        output_func=sfp_methods.rgb_output
+        output_func=sfp_methods.rgb_output,
+        num_workers=num_workers
     )
 
 
@@ -57,7 +59,8 @@ def rgb_resnet18_train(
     batch_size: int = 32,
     lr: float = 0.01,
     val_epochs: int = 2,
-    patience: int = 10
+    patience: int = 10,
+    num_workers: int = 8
 ):
     model = sfp_models.RgbResNet18Model()
     train_dataset = sfp_datasets.RgbDataset(
@@ -87,7 +90,8 @@ def rgb_resnet18_train(
         lr=lr,
         val_epoches=val_epochs,
         patience=patience,
-        output_func=sfp_methods.rgb_output
+        output_func=sfp_methods.rgb_output,
+        num_workers=num_workers
     )
 
 def rgb_vgg16_tm_trian(
@@ -99,7 +103,8 @@ def rgb_vgg16_tm_trian(
     batch_size: int = 32,
     lr: float = 0.01,
     val_epochs: int = 2,
-    patience: int = 10
+    patience: int = 10,
+    num_workers: int = 8
 ):
     model = sfp_models.RgbVgg16TmModel()
     train_dataset = sfp_datasets.RgbTmDataset(
@@ -131,7 +136,8 @@ def rgb_vgg16_tm_trian(
         lr=lr,
         val_epoches=val_epochs,
         patience=patience,
-        output_func=sfp_methods.rgb_and_tm_output
+        output_func=sfp_methods.rgb_and_tm_output,
+        num_workers=num_workers
     )
 
 def rgb_resnet18_tm_train(
@@ -143,7 +149,8 @@ def rgb_resnet18_tm_train(
     batch_size: int = 32,
     lr: float = 0.01,
     val_epochs: int = 2,
-    patience: int = 10
+    patience: int = 10,
+    num_workers: int = 8
 ):
     model = sfp_models.RgbResNet18TmModel()
     train_dataset = sfp_datasets.RgbTmDataset(
@@ -175,5 +182,6 @@ def rgb_resnet18_tm_train(
         lr=lr,
         val_epoches=val_epochs,
         patience=patience,
-        output_func=sfp_methods.rgb_and_tm_output
+        output_func=sfp_methods.rgb_and_tm_output,
+        num_workers=num_workers
     )

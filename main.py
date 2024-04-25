@@ -12,17 +12,18 @@ if __name__ == '__main__':
     sapflow_rgb_images_dir = src_dir / 'data' / 'sapflow_predict_data' / 'rgb_images'
     sapflow_dir = src_dir / 'data' / 'sapflow_predict_data' / 'sapflow'
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    # print('='*10+'soil_moisture_predict: rgb_vgg16_train'+'='*10)
-    # smp_train.rgb_vgg16_train(
-    #     rgb_images_dir=rgb_images_dir, 
-    #     soil_moisture_filepath=soil_moisture_file_path,
-    #     device=device,
-    #     num_epochs=1,
-    #     batch_size=32,
-    #     lr=0.01,
-    #     val_epochs=1,
-    #     patience=10
-    # )
+    print('='*10+'soil_moisture_predict: rgb_vgg16_train'+'='*10)
+    smp_train.rgb_vgg16_train(
+        rgb_images_dir=rgb_images_dir, 
+        soil_moisture_filepath=soil_moisture_file_path,
+        device=device,
+        num_epochs=300,
+        batch_size=32,
+        lr=0.001,
+        val_epochs=2,
+        patience=10,
+        num_workers=16
+    )
 
     # print('='*10+'soil_moisture_predict: rgb_vgg16_tm_train'+'='*10)
     # smp_train.rgb_vgg16_tm_trian(
@@ -67,10 +68,10 @@ if __name__ == '__main__':
     #     rgb_images_dir=sapflow_rgb_images_dir, 
     #     sapflow_dir=sapflow_dir,
     #     device=device,
-    #     num_epochs=1,
+    #     num_epochs=300,
     #     batch_size=32,
     #     lr=0.01,
-    #     val_epochs=1,
+    #     val_epochs=2,
     #     patience=10
     # )
 
@@ -87,30 +88,30 @@ if __name__ == '__main__':
     #     patience=10
     # )
 
-    print('='*10+'sapflow_predict: rgb_renet18_train'+'='*10)
-    sfp_train.rgb_resnet18_train(
-        rgb_images_dir=sapflow_rgb_images_dir, 
-        sapflow_dir=sapflow_dir,
-        device=device,
-        num_epochs=1,
-        batch_size=32,
-        lr=0.01,
-        val_epochs=1,
-        patience=10
-    )
+    # print('='*10+'sapflow_predict: rgb_renet18_train'+'='*10)
+    # sfp_train.rgb_resnet18_train(
+    #     rgb_images_dir=sapflow_rgb_images_dir, 
+    #     sapflow_dir=sapflow_dir,
+    #     device=device,
+    #     num_epochs=1,
+    #     batch_size=32,
+    #     lr=0.01,
+    #     val_epochs=1,
+    #     patience=10
+    # )
 
-    print('='*10+'sapflow_predict: rgb_renet18_tm_train'+'='*10)
-    sfp_train.rgb_resnet18_tm_train(
-        rgb_images_dir=sapflow_rgb_images_dir, 
-        sapflow_dir=sapflow_dir,
-        temp_moisture_filepath=temp_moisture_file_path,
-        device=device,
-        num_epochs=1,
-        batch_size=32,
-        lr=0.01,
-        val_epochs=1,
-        patience=10
-    )
+    # print('='*10+'sapflow_predict: rgb_renet18_tm_train'+'='*10)
+    # sfp_train.rgb_resnet18_tm_train(
+    #     rgb_images_dir=sapflow_rgb_images_dir, 
+    #     sapflow_dir=sapflow_dir,
+    #     temp_moisture_filepath=temp_moisture_file_path,
+    #     device=device,
+    #     num_epochs=1,
+    #     batch_size=32,
+    #     lr=0.01,
+    #     val_epochs=1,
+    #     patience=10
+    # )
 
 
 
