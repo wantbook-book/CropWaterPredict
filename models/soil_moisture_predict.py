@@ -359,8 +359,11 @@ class RgbVgg16TmModel(nn.Module):
         T_moisture = T_moisture.transpose(1,2)
         # tm_embd: [B, mlp_output_dim*3]
         tm_embd = self.tm_mlp(T_moisture)
+        # 归一化
+        tm_embd_min = tm_embd.min(axis=2, keepdim=True)[0]
+        tm_embd_max = tm_embd.max(axis=2, keepdim=True)[0]
+        tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
         tm_embd = tm_embd.flatten(1)
-        breakpoint()
         # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
         # 不确定要不要归一化
         # tm_embd = torch.sum(tm_embd, dim=1)
