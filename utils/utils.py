@@ -38,12 +38,16 @@ def save_results(
 ):
     train_org_len = len(train_losses)
     val_org_len = len(val_losses)
+    min_val_loss = min(val_losses)
+    min_val_loss_index = val_losses.index(min_val_loss)
     with open(output_dir/'train_losses.txt', 'w') as f:
         for i in range(len(train_losses)):
-            f.write(f'{i+1}: {train_losses[i]}\n')
+            f.write(f'{i+1}:{train_losses[i]}\n')
     with open(output_dir/'val_losses.txt', 'w') as f:
         for i in range(len(val_losses)):
-            f.write(f'{(i+1)*val_epoches}: {val_losses[i]}\n')
+            f.write(f'{(i+1)*val_epoches}:{val_losses[i]}\n')
+        f.write(f'min_loss:{(min_val_loss_index+1)*val_epoches}:{min_val_loss}')
+    
     train_losses = train_losses[skip_epoches:]
     val_losses = val_losses[skip_epoches//val_epoches:]
     plt.figure(figsize=(10, 6))

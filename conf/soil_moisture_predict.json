@@ -13,7 +13,8 @@
             "nhidlayer": 2,
             "hidden_dim": 256,
             "output_dim": 1,
-            "hidactive": "relu"
+            "hidactive": "relu",
+            "norm": false
         }
     },
     "rgb_tm":{
@@ -38,15 +39,16 @@
             "hidden_dim": 64,
             "nhidlayer": 2,
             "output_dim": 128,
-            "hidactive": "relu"
+            "hidactive": "relu",
+            "norm": true
         },
         "mlp": {
             "input_dim": 896,
             "hidden_dim": 512,
             "output_dim": 1,
-            "nhidlayer": 2,
-            "hidactive": "relu"
-
+            "nhidlayer": 1,
+            "hidactive": "relu",
+            "norm": false
         }
     }
 }

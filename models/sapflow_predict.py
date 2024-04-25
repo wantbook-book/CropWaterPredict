@@ -29,6 +29,7 @@ class RgbVgg16Model(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm'],
         }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -49,6 +50,7 @@ class RgbVgg16Model(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
 
@@ -96,6 +98,7 @@ class RgbVgg16TmModel(nn.Module):
             'output_dim': config['tm_mlp']['output_dim'],
             'nhidlayer': config['tm_mlp']['nhidlayer'],
             'hidactive': config['tm_mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm'],
         }
         
         self.net_settings['mlp'] = {
@@ -104,6 +107,7 @@ class RgbVgg16TmModel(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm'],
         }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
@@ -130,6 +134,7 @@ class RgbVgg16TmModel(nn.Module):
             hidsize=config['tm_mlp']['hidden_dim'], 
             outsize=config['tm_mlp']['output_dim'],
             nhidlayer=config['tm_mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['tm_mlp']['hidactive']),
         )
         self.final_mlp = MLP(
@@ -137,6 +142,7 @@ class RgbVgg16TmModel(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -202,6 +208,7 @@ class RgbResNet18Model(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm'],
         }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -223,6 +230,7 @@ class RgbResNet18Model(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
 
@@ -270,6 +278,7 @@ class RgbResNet18TmModel(nn.Module):
             'output_dim': config['tm_mlp']['output_dim'],
             'nhidlayer': config['tm_mlp']['nhidlayer'],
             'hidactive': config['tm_mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm']
         }
         
         self.net_settings['mlp'] = {
@@ -278,6 +287,7 @@ class RgbResNet18TmModel(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm']
         }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
@@ -305,6 +315,7 @@ class RgbResNet18TmModel(nn.Module):
             hidsize=config['tm_mlp']['hidden_dim'], 
             outsize=config['tm_mlp']['output_dim'],
             nhidlayer=config['tm_mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['tm_mlp']['hidactive']),
         )
         self.final_mlp = MLP(
@@ -312,6 +323,7 @@ class RgbResNet18TmModel(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)

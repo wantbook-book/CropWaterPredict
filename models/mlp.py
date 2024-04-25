@@ -20,20 +20,20 @@ from utils.utils import parse_dtype
 #         out = self.output_layer(out)
 #         return out
 
-def NormedLinear(*args, scale=1.0, dtype=torch.float32, **kwargs):
+def NormedLinear(*args, scale=1.0, norm:bool=True, dtype=torch.float32, **kwargs):
     dtype = parse_dtype(dtype)
     if dtype == torch.float32:
         out = nn.Linear(*args, **kwargs)
     else:
         raise ValueError(dtype)
-    
-    out.weight.data *= scale / out.weight.norm(dim=1, p=2, keepdim=True)
-    if kwargs.get('bias', True):
-        out.bias.data *= 0
+    if norm:
+        out.weight.data *= scale / out.weight.norm(dim=1, p=2, keepdim=True)
+    # if kwargs.get('bias', True):
+    #     out.bias.data *= 0
     return out
 
 class MLP(nn.Module):
-    def __init__(self, insize, nhidlayer, outsize, hidsize, hidactive, dtype=torch.float32):
+    def __init__(self, insize, nhidlayer, outsize, hidsize, hidactive, dtype=torch.float32, norm:bool=True):
         super().__init__()
         self.insize = insize
         self.nhidlayer = nhidlayer
@@ -41,7 +41,7 @@ class MLP(nn.Module):
         in_sizes = [insize] + [hidsize]*nhidlayer
         out_sizes = [hidsize]*nhidlayer + [outsize]
         self.layers = nn.ModuleList(
-            [NormedLinear(insize, outsize, dtype=dtype) for (insize, outsize) in zip(in_sizes, out_sizes)]
+            [NormedLinear(insize, outsize, dtype=dtype, norm=norm) for (insize, outsize) in zip(in_sizes, out_sizes)]
         )
         self.hidactive = hidactive
     def forward(self, x):
