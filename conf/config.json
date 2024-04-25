@@ -30,22 +30,22 @@
         "rgb":{
             "rgb_vgg16": {
                 "output_dim": 512,
-                "finetune": false
+                "finetune": true
             },
             "rgb_resnet18": {
                 "output_dim": 512,
-                "finetune": true
+                "finetune": false
             },
             "mlp": {
                 "input_dim": 512,
-                "hidden_dim": 384,
+                "hidden_dim": 128,
                 "output_dim": 1
             }
         },
         "rgb_tm":{
             "rgb_vgg16": {
                 "output_dim": 512,
-                "finetune": false
+                "finetune": true
             },
             "T_moisture_encoder": {
                 "input_dim": 3,
@@ -61,12 +61,12 @@
             },
             "tm_mlp":{
                 "input_dim": 144,
-                "hidden_dim": 64,
-                "output_dim": 128
+                "hidden_dim": 32,
+                "output_dim": 16
             },
             "mlp": {
-                "input_dim": 896,
-                "hidden_dim": 512,
+                "input_dim": 560,
+                "hidden_dim": 128,
                 "output_dim": 1
             }
         }
