@@ -17,17 +17,20 @@ class EarlyStopping:
         self.epochs_no_improve = 0
         self.early_stop = False
 
-    def __call__(self, val_loss):
+    def __call__(self, val_loss) -> bool:
         score = -val_loss
 
         if self.best_score is None:
             self.best_score = score
+            return True
         elif score < self.best_score + self.delta:
             self.epochs_no_improve += 1
             if self.epochs_no_improve >= self.patience:
                 if self.verbose:
                     print("Early stopping")
                 self.early_stop = True
+            return False
         else:
             self.best_score = score
             self.epochs_no_improve = 0
+            return True

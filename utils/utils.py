@@ -28,6 +28,7 @@ def get_next_subdir_name(dir_path: Path)->str:
     return str(max_num+1)
 
 def save_results(
+    best_model_weights,
     model: nn.Module,
     train_losses: list[float],
     val_losses: list[float],
@@ -64,4 +65,5 @@ def save_results(
     # plt.ylabel('Validation Loss')
     # plt.grid(True)
     plt.savefig(output_dir/'loss_curve.png')
-    torch.save(model.state_dict(), output_dir/'weights.pth')
+    torch.save(model.state_dict(), output_dir/'last_weights.pth')
+    torch.save(best_model_weights, output_dir/'best_weights.pth')

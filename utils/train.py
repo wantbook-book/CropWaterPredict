@@ -76,6 +76,7 @@ def train(
 
     train_losses = []
     val_losses = []
+    best_model_weights = None
     for epoch in range(num_epochs):
         batch_losses = []
         for data in tqdm(train_loader, desc=f'Epoch {epoch+1}'):  # 假设dataloader已准备好
@@ -104,7 +105,8 @@ def train(
             val_losses.append(validation_loss)
             print(f'After epoch {epoch+1}, Validation Loss: {validation_loss:.4f}')
             writer.add_scalar('Loss/Validate', validation_loss, epoch)
-            early_stopping(validation_loss)
+            if early_stopping(validation_loss):
+                best_model_weights = model.state_dict().copy()
             if early_stopping.early_stop:
                 print("Early stopping triggered! Best validation loss:", early_stopping.best_score)
                 break
@@ -119,6 +121,7 @@ def train(
 
     model.output_net_settings(new_dir_path)
     save_results(
+        best_model_weights=best_model_weights,
         model=model,
         train_losses=train_losses,
         val_losses=val_losses,

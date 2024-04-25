@@ -33,7 +33,7 @@ if __name__ == '__main__':
         device=device,
         num_epochs=300,
         batch_size=32,
-        lr=0.0005,
+        lr=0.0002,
         val_epochs=2,
         patience=10,
         num_workers=16
