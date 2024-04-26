@@ -29,7 +29,7 @@ class RgbVgg16Model(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
-            'norm': config['tm_mlp']['norm'],
+            'norm': config['mlp']['norm'],
         }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -50,7 +50,7 @@ class RgbVgg16Model(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
-            norm=config['tm_mlp']['norm'],
+            norm=config['mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
 
@@ -107,7 +107,7 @@ class RgbVgg16TmModel(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
-            'norm': config['tm_mlp']['norm'],
+            'norm': config['mlp']['norm'],
         }
         self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=config['rgb_vgg16']['output_dim'], finetune=config['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
@@ -142,7 +142,7 @@ class RgbVgg16TmModel(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
-            norm=config['tm_mlp']['norm'],
+            norm=config['mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -179,6 +179,10 @@ class RgbVgg16TmModel(nn.Module):
         T_moisture = T_moisture.transpose(1,2)
         # tm_embd: [B, mlp_output_dim*3]
         tm_embd = self.tm_mlp(T_moisture)
+        # 归一化
+        tm_embd_min = tm_embd.min(axis=2, keepdim=True)[0]
+        tm_embd_max = tm_embd.max(axis=2, keepdim=True)[0]
+        tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
         tm_embd = tm_embd.flatten(1)
         # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
         # 不确定要不要归一化
@@ -208,7 +212,7 @@ class RgbResNet18Model(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
-            'norm': config['tm_mlp']['norm'],
+            'norm': config['mlp']['norm'],
         }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -230,7 +234,7 @@ class RgbResNet18Model(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
-            norm=config['tm_mlp']['norm'],
+            norm=config['mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
 
@@ -287,7 +291,7 @@ class RgbResNet18TmModel(nn.Module):
             'output_dim': config['mlp']['output_dim'],
             'nhidlayer': config['mlp']['nhidlayer'],
             'hidactive': config['mlp']['hidactive'],
-            'norm': config['tm_mlp']['norm']
+            'norm': config['mlp']['norm']
         }
         # self.rgb_vgg16 = VGG16(VGG_WEIGHTS_PATH, num_classes=soil_water_conf['rgb_vgg16']['output_dim'], finetune=soil_water_conf['rgb_vgg16']['finetune'])
         # self.TM_encoder = TransformerEncoder(
@@ -323,7 +327,7 @@ class RgbResNet18TmModel(nn.Module):
             hidsize=config['mlp']['hidden_dim'], 
             outsize=config['mlp']['output_dim'],
             nhidlayer=config['mlp']['nhidlayer'],
-            norm=config['tm_mlp']['norm'],
+            norm=config['mlp']['norm'],
             hidactive=functools.partial(act, config['mlp']['hidactive']),
         )
         # self.data_config = timm.data.resolve_model_data_config(self.rgb_vgg16.model)
@@ -359,6 +363,10 @@ class RgbResNet18TmModel(nn.Module):
         T_moisture = T_moisture.transpose(1,2)
         # tm_embd: [B, mlp_output_dim*3]
         tm_embd = self.tm_mlp(T_moisture)
+        # 归一化
+        tm_embd_min = tm_embd.min(axis=2, keepdim=True)[0]
+        tm_embd_max = tm_embd.max(axis=2, keepdim=True)[0]
+        tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
         tm_embd = tm_embd.flatten(1)
         # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
         # 不确定要不要归一化
