@@ -25,6 +25,7 @@ def evaluate(
 ):
     model.eval()  # 将模型设置为评估模式
     validation_losses = []
+    val_mapes = []
     with torch.no_grad():  # 在评估阶段不计算梯度
         for data in tqdm(validation_dataloader, desc='validate'):
             # images = images.to(device)
@@ -33,9 +34,10 @@ def evaluate(
             outputs, labels = output_func(model, device, data)
             loss = criterion(outputs, labels)
             validation_losses.append(loss.item())
+            val_mapes.append(torch.mean(torch.abs(labels-outputs)/labels).item())
 
     model.train()  # 将模型设置回训练模式
-    return np.mean(validation_losses)
+    return np.mean(validation_losses), np.mean(val_mapes)
 
 
 def train(
@@ -52,7 +54,8 @@ def train(
     val_epoches: int = 5,
     patience: int = 4,
     draw_skip_epoches: int = 0,
-    num_workers:int = 8
+    num_workers:int = 8,
+    save_models: bool = True
 ):
     results_dir.mkdir(exist_ok=True, parents=True)
     new_dir_path = results_dir / get_next_subdir_name(results_dir)
@@ -76,9 +79,12 @@ def train(
 
     train_losses = []
     val_losses = []
+    train_mapes = []
+    val_mapes = []
     best_model_weights = None
     for epoch in range(num_epochs):
         batch_losses = []
+        batch_mapes = []
         for data in tqdm(train_loader, desc=f'Epoch {epoch+1}'):  # 假设dataloader已准备好
             # images = images.to(device)
             # labels = labels.to(device)
@@ -89,13 +95,15 @@ def train(
             loss.backward()
             optimizer.step()
             # scheduler.step()
+            batch_mapes.append(torch.mean(torch.abs(labels-outputs)/labels).item())
             batch_losses.append(loss.item())
         train_loss = np.mean(batch_losses)
         train_losses.append(train_loss)
+        train_mapes.append(np.mean(batch_mapes))
         writer.add_scalar('Loss/train', train_loss, epoch)
         print(f'Epoch {epoch+1}/{num_epochs}, Loss: {train_loss:.4f}')
         if (epoch+1) % val_epoches == 0:  # 每10个epoch后在验证集上进行评估
-            validation_loss = evaluate(
+            validation_loss, val_mape = evaluate(
                                         model=model, 
                                         validation_dataloader=val_loader, 
                                         criterion=criterion, 
@@ -103,6 +111,7 @@ def train(
                                         output_func=output_func
                                     )
             val_losses.append(validation_loss)
+            val_mapes.append(val_mape)
             print(f'After epoch {epoch+1}, Validation Loss: {validation_loss:.4f}')
             writer.add_scalar('Loss/Validate', validation_loss, epoch)
             if early_stopping(validation_loss):
@@ -123,11 +132,14 @@ def train(
     save_results(
         best_model_weights=best_model_weights,
         model=model,
+        train_mapes=train_mapes,
+        val_mapes=val_mapes,
         train_losses=train_losses,
         val_losses=val_losses,
         output_dir=new_dir_path,
         val_epoches=val_epoches,
-        skip_epoches=draw_skip_epoches
+        skip_epoches=draw_skip_epoches,
+        save_models=save_models
     )
 
 # 示例: 如何调用validate_model函数

@@ -30,12 +30,15 @@ def get_next_subdir_name(dir_path: Path)->str:
 def save_results(
     best_model_weights,
     model: nn.Module,
+    train_mapes: list[float],
+    val_mapes: list[float],
     train_losses: list[float],
     val_losses: list[float],
     output_dir: Path,
     val_epoches: int,
     # skip epoches for drawing loss curve
     skip_epoches: int = 5,
+    save_models: bool = True
 ):
     train_org_len = len(train_losses)
     val_org_len = len(val_losses)
@@ -48,6 +51,13 @@ def save_results(
         for i in range(len(val_losses)):
             f.write(f'{(i+1)*val_epoches}:{val_losses[i]}\n')
         f.write(f'min_loss:{(min_val_loss_index+1)*val_epoches}:{min_val_loss}')
+    
+    with open(output_dir/'train_mapes.txt', 'w') as f:
+        for i in range(len(train_mapes)):
+            f.write(f'{i+1}:{train_mapes[i]}\n')
+    with open(output_dir/'val_mapes.txt', 'w') as f:
+        for i in range(len(val_mapes)):
+            f.write(f'{(i+1)*val_epoches}:{val_mapes[i]}\n')
     
     train_losses = train_losses[skip_epoches:]
     val_losses = val_losses[skip_epoches//val_epoches:]
@@ -65,5 +75,6 @@ def save_results(
     # plt.ylabel('Validation Loss')
     # plt.grid(True)
     plt.savefig(output_dir/'loss_curve.png')
-    torch.save(model.state_dict(), output_dir/'last_weights.pth')
-    torch.save(best_model_weights, output_dir/'best_weights.pth')
+    if save_models:
+        torch.save(model.state_dict(), output_dir/'last_weights.pth')
+        torch.save(best_model_weights, output_dir/'best_weights.pth')
