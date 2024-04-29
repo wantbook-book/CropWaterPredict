@@ -17,7 +17,7 @@ RESNET18_WEIGHTS_PATH = str(SRC_PATH / 'model_weights/resnet18.bin')
 class RgbResNet18Model(nn.Module):
     def __init__(self):
         super(RgbResNet18Model, self).__init__()
-        config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['rgb']
+        config = ConfigManager(SRC_PATH / 'conf/soil_moisture_predict.json')['resnet18_rgb']
         self.net_settings = {}
         self.net_settings['rgb_resnet18'] = {
             'output_dim': config['rgb_resnet18']['output_dim'],

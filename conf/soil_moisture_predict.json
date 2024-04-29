@@ -14,6 +14,20 @@
             "hidden_dim": 256,
             "output_dim": 1,
             "hidactive": "relu",
+            "norm": true
+        }
+    },
+    "resnet18_rgb":{
+        "rgb_resnet18": {
+            "output_dim": 512,
+            "finetune": true
+        },
+        "mlp": {
+            "input_dim": 512,
+            "nhidlayer": 2,
+            "hidden_dim": 256,
+            "output_dim": 1,
+            "hidactive": "relu",
             "norm": false
         }
     },
@@ -48,7 +62,7 @@
             "output_dim": 1,
             "nhidlayer": 1,
             "hidactive": "relu",
-            "norm": false
+            "norm": true
         }
     },
     "resnet18_rgb_tm":{
