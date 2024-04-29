@@ -42,11 +42,9 @@ def process(image_file: Path, output_dir: Path, predictor, device):
 
         elif key == ord('n'):
             # 这里可以添加处理图片的逻辑
-            print("save...")
             input_points = []
             input_labels = []
             # cv2.destroyAllWindows()
-            print('save succeed!')
             return
         elif key == ord('r'):
             print('reset...')
@@ -87,9 +85,9 @@ def segment_mask(predictor, image_org):
     padding = 20
     true_indices = np.argwhere(mask)
     # 找到最小矩形框的左上角和右下角坐标
+    # (min_y, min_x) y 向下增大， x向右增大
     top_left = true_indices.min(axis=0)
     bottom_right = true_indices.max(axis=0)
-
 
 
     # mask_3d = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
@@ -99,8 +97,15 @@ def segment_mask(predictor, image_org):
     image_processed = cv2.addWeighted(image_org, 0.4, mask_image, 0.6, 0)
     image_tosave = np.zeros_like(image_org)
     image_tosave[mask] = image_org[mask]
+    # image.shape (height, width, channel)
+    _top = max(top_left[0] - padding, 0)
+    _bottom = min(image_tosave.shape[0], bottom_right[0]+padding)
+    _left = max(top_left[1]-padding, 0)
+    _right = min(image_tosave.shape[1], bottom_right[1]+padding)
 
-    clip_image = image_tosave[top_left[0]-padding:bottom_right[0]+padding, top_left[1]-padding:bottom_right[1]+padding]
+    
+    # clip_image = image_tosave[top_left[0]-padding:bottom_right[0]+padding, top_left[1]-padding:bottom_right[1]+padding]
+    clip_image = image_tosave[_top:_bottom, _left:_right]
     # for mask in masks:
     #     color = np.array([30/255, 144/255, 255/255], dtype=np.float32)
     #     h, w = mask.shape[-2:]
@@ -141,6 +146,15 @@ if __name__ == '__main__':
     sam.to(device=device)
     predictor = SamPredictor(sam)
 
+    have_arrived_last_edit = False
+    count = 0
+    total = 0
+    for path in images_dir.iterdir():
+        if path.is_dir():
+            for image_file in path.iterdir():
+                if image_file.is_file():
+                    if image_file.suffix.lower() in IMAGE_SUFFIXES:
+                        total += 1
     for path in images_dir.iterdir():
         if path.is_dir():
             date = path.name
@@ -155,5 +169,9 @@ if __name__ == '__main__':
             for image_file in path.iterdir():
                 if image_file.is_file():
                     if image_file.suffix.lower() in IMAGE_SUFFIXES:
-                        print('process image:', image_file)
+                        count += 1
+                        print(f'process image {count}/{total}:', image_file)
+                        if not(date == '11-8' and image_file.stem == '21') and not have_arrived_last_edit:
+                            continue
+                        have_arrived_last_edit = True 
                         process(image_file, output_dir=subdir_path, predictor=predictor, device=device)
