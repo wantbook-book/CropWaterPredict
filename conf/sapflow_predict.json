@@ -1,4 +1,22 @@
 {
+    "tm": {
+        "tm_mlp":{
+            "input_dim": 144,
+            "nhidlayer": 2,
+            "hidden_dim": 64,
+            "output_dim": 128,
+            "hidactive": "relu",
+            "norm": true
+        },
+        "mlp": {
+            "input_dim": 768,
+            "nhidlayer": 1,
+            "hidden_dim": 512,
+            "output_dim": 1,
+            "hidactive": "relu",
+            "norm": false
+        }
+    },
     "rgb":{
         "rgb_vgg16": {
             "output_dim": 512,

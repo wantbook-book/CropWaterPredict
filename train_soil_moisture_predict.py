@@ -17,7 +17,8 @@ def rgb_vgg16_train(
     val_epochs: int = 2,
     patience: int = 10,
     num_workers: int = 8,
-    save_models: bool = True
+    save_models: bool = True,
+    results_dir: Path = Path('train/soil_moisture_predict/rgb_vgg16')
 ):
     model = smp_models.RgbVgg16Model()
     train_dataset = smp_datasets.rgb_dataset(
@@ -41,7 +42,7 @@ def rgb_vgg16_train(
         device=device,
         train_dataset=train_dataset,
         validation_dataset=validation_dataset,
-        results_dir=Path('train/soil_moisture_predict/rgb_vgg16'),
+        results_dir=results_dir,
         num_epochs=num_epochs,
         batch_size=batch_size,
         lr=lr,
@@ -109,7 +110,8 @@ def rgb_vgg16_tm_trian(
     val_epochs: int = 2,
     patience: int = 10,
     num_workers: int = 8,
-    save_models: bool = True
+    save_models: bool = True,
+    results_dir=Path('train/soil_moisture_predict/rgb_vgg16_tm')
 ):
     model = smp_models.RgbVgg16TmModel()
     train_dataset = smp_datasets.rgb_tm_dataset(
@@ -135,7 +137,7 @@ def rgb_vgg16_tm_trian(
         device=device,
         train_dataset=train_dataset,
         validation_dataset=validation_dataset,
-        results_dir=Path('train/soil_moisture_predict/rgb_vgg16_tm'),
+        results_dir=results_dir,
         num_epochs=num_epochs,
         batch_size=batch_size,
         lr=lr,

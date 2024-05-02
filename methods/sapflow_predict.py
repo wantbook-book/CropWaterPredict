@@ -18,3 +18,10 @@ def rgb_and_tm_output(model: nn.Module, device: torch.device, data: list[torch.T
     labels = labels.to(device)
     outputs = model(images, temp_moistures)
     return outputs, labels
+
+def tm_output(model: nn.Module, device: torch.device, data: list[torch.Tensor])->tuple[torch.Tensor, torch.Tensor]:
+    _, temp_moistures, labels = data
+    temp_moistures = temp_moistures.to(device)
+    labels = labels.to(device)
+    outputs = model(temp_moistures)
+    return outputs, labels

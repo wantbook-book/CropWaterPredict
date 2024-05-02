@@ -102,7 +102,6 @@ class RgbTmDataset(Dataset):
         return len(self.rgb_images)
 
 
-
 if __name__ == '__main__':
     rgb_dataset = RgbDataset(
         rgb_images_dir=Path('../data/sapflow_predict_data/rgb_images'),

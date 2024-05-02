@@ -14,6 +14,88 @@ from torchvision import transforms
 SRC_PATH = Path(__file__).resolve().parent.parent
 VGG_WEIGHTS_PATH = str(Path(__file__).parent.parent / 'model_weights/vgg16.bin')
 RESNET18_WEIGHTS_PATH = str(Path(__file__).parent.parent / 'model_weights/resnet18.bin')
+
+class TempMoistureModel(nn.Module):
+    def __init__(self):
+        super(TempMoistureModel, self).__init__()
+        config = ConfigManager(SRC_PATH / 'conf/sapflow_predict.json')['tm']
+        self.net_settings = {}
+        
+        self.net_settings['tm_mlp'] = {
+            'input_dim': config['tm_mlp']['input_dim'], 
+            'hidden_dim': config['tm_mlp']['hidden_dim'], 
+            'output_dim': config['tm_mlp']['output_dim'],
+            'nhidlayer': config['tm_mlp']['nhidlayer'],
+            'hidactive': config['tm_mlp']['hidactive'],
+            'norm': config['tm_mlp']['norm'],
+        }
+        
+        self.net_settings['mlp'] = {
+            'input_dim': config['mlp']['input_dim'], 
+            'hidden_dim': config['mlp']['hidden_dim'], 
+            'output_dim': config['mlp']['output_dim'],
+            'nhidlayer': config['mlp']['nhidlayer'],
+            'hidactive': config['mlp']['hidactive'],
+            'norm': config['mlp']['norm'],
+        }
+        self.tm_mlp = MLP(
+            insize=config['tm_mlp']['input_dim'], 
+            hidsize=config['tm_mlp']['hidden_dim'], 
+            outsize=config['tm_mlp']['output_dim'],
+            nhidlayer=config['tm_mlp']['nhidlayer'],
+            norm=config['tm_mlp']['norm'],
+            hidactive=functools.partial(act, config['tm_mlp']['hidactive']),
+        )
+        self.final_mlp = MLP(
+            insize=config['mlp']['input_dim'], 
+            hidsize=config['mlp']['hidden_dim'], 
+            outsize=config['mlp']['output_dim'],
+            nhidlayer=config['mlp']['nhidlayer'],
+            norm=config['mlp']['norm'],
+            hidactive=functools.partial(act, config['mlp']['hidactive']),
+        )
+    def get_image_transform(self, is_training=False):
+        # return timm.data.create_transform(**self.data_config, is_training=is_training)
+        if is_training:
+            _transform = transforms.Compose([
+                transforms.Resize(256),
+                # transforms.RandomCrop(224),
+                transforms.CenterCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            _transform = transforms.Compose([
+                transforms.Resize(256),            # 将图像大小调整一致
+                transforms.CenterCrop(224),        # 中心裁剪以匹配模型输入
+                transforms.ToTensor(),             # 转换为张量
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],  # 标准化处理
+                                    std=[0.229, 0.224, 0.225])
+            ])
+        return _transform  
+
+    def forward(self, T_moisture):
+        # rgb_image: [B, C, H, W]
+        # T_moisture: [B, num_per_day, 3]
+        T_moisture = T_moisture.transpose(1,2)
+        # tm_embd: [B, mlp_output_dim*3]
+        tm_embd = self.tm_mlp(T_moisture)
+        # 归一化
+        tm_embd_min = tm_embd.min(axis=2, keepdim=True)[0]
+        tm_embd_max = tm_embd.max(axis=2, keepdim=True)[0]
+        tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
+        tm_embd = tm_embd.flatten(1)
+        # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
+        # 不确定要不要归一化
+        # tm_embd = torch.sum(tm_embd, dim=1)
+        # breakpoint()
+        return self.final_mlp(tm_embd)
+    
+    def output_net_settings(self, output_dir:Path):
+        with open(output_dir/'net_settings.json', 'w') as f:
+            json.dump(self.net_settings, f, indent=4)
+
 class RgbVgg16Model(nn.Module):
     def __init__(self):
         super(RgbVgg16Model, self).__init__()
@@ -470,9 +552,9 @@ class RgbResNet18TmTransformerModel(nn.Module):
         # tm_embd: [B, mlp_output_dim*3]
         # tm_embd = self.tm_mlp(T_moisture)
         # 归一化
-        # tm_embd_min = tm_embd.min(axis=2, keepdim=True)[0]
-        # tm_embd_max = tm_embd.max(axis=2, keepdim=True)[0]
-        # tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
+        tm_embd_min = tm_embd.min(axis=1, keepdim=True)[0]
+        tm_embd_max = tm_embd.max(axis=1, keepdim=True)[0]
+        tm_embd = (tm_embd-tm_embd_min) / (tm_embd_max - tm_embd_min)
         # tm_embd = tm_embd.flatten(1)
         # tm_embd = torch.sum(tm_embd, dim=1) / torch.norm(tm_embd, p=2, dim=1, keepdim=True)
         # 不确定要不要归一化
