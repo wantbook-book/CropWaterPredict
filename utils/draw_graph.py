@@ -53,6 +53,9 @@ def compare_train_val_curves(result1_path: Path, result2_path: Path, label1: str
     plt.savefig(output_path)
     
 
+
+
+
 if __name__ == '__main__':
     result1_paths = [
         Path('../train/sapflow_predict/rgb_vgg16/2best'),
