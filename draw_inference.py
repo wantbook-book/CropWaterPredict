@@ -15,13 +15,13 @@ def infer_and_draw():
     # -----需要改------
     model1 = smp_models.RgbVgg16Model()
     model1.load_state_dict(torch.load(src_dir/'train/soil_moisture_predict/segment_rgb_vgg16/14r/best_weights.pth', map_location=device))
-    # model1 = sfp_models.RgbResNet18Model()
-    # model1.load_state_dict(torch.load(src_dir/'train/sapflow_predict/rgb_resnet18/best1/best_weights.pth', map_location=device))
-    model2 = model1
+    # model1 = sfp_models.RgbResNet18TmModel()
+    # model1.load_state_dict(torch.load(src_dir/'train/sapflow_predict/rgb_resnet18_tm/best1r/best_weights.pth', map_location=device))
     # model2 = smp_models.RgbVgg16Model()
     # model2.load_state_dict(torch.load(src_dir/'train/soil_moisture_predict/segment_rgb_vgg16/14r/best_weights.pth', map_location=device))
-    # model2 = sfp_models.RgbResNet18TmModel()
-    # model2.load_state_dict(torch.load(src_dir/'train/sapflow_predict/rgb_resnet18_tm/best1/best_weights.pth', map_location=device))
+    # model2 = sfp_models.RgbResNet18TmTransformerModel()
+    # model2.load_state_dict(torch.load(src_dir/'train/sapflow_predict/rgb_resnet18_tm_transformer/17r/best_weights.pth', map_location=device))
+    model2 = model1
     # -----需要改------
 
     rgb_images_dir = src_dir / 'data' / 'rgb_images'
@@ -46,6 +46,7 @@ def infer_and_draw():
         soil_moisture_filepath=soil_moisture_file_path,
         transform=model1.get_image_transform(is_training=False)
     )
+    print('dataset size:', len(dataset))
     # -----需要改------
 
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
@@ -69,8 +70,8 @@ def infer_and_draw():
         y_label='True Soil Moisture (%)',
         x_label='Predicted Soil Moisture (%)',
         device=device,
-        legend_label1='VGG16',
-        legend_label2='VGG16'
+        legend_label1='segment_rgb_vgg16',
+        legend_label2='segment_rgb_vgg16'
     )
     # -----需要改------
     
@@ -79,24 +80,26 @@ def infer_and_draw():
 def draw():
     src_dir = Path(__file__).resolve().parent
     # -----需要改------
-    # labels = read_labels(label_file=src_dir/'graphs/true_vs_predict/sapflow/rgb_vgg16_vs_resnet18.txt')
-    labels = read_labels(label_file=src_dir/'graphs/true_vs_predict/soil_moisture/only_rgb_resnet18_vs_rgb_tm_resnet18.txt')
+    labels = read_labels(label_file=src_dir/'graphs/true_vs_predict/sapflow/resnet18_tm_vs_resnet18_tm_transformer.txt')
+    # labels = read_labels(label_file=src_dir/'graphs/true_vs_predict/soil_moisture/only_rgb_vgg16_vs_rgb_tm_vgg16.txt')
     # -----需要改------
     labels = np.array(labels)
-    labels[:, 2] = labels[:, 2] + 1
+    marker = abs(labels[:, 0] - labels[:, 2]) <= 2
+    labels = labels[marker]
+    # labels[:, 2] = labels[:, 2] + 1
     # labels[:, [1,2]] = labels[:, [2,1]]
 
     # -----需要改------
     draw_infer_graph(
         labels=labels, 
-        # output_file=src_dir/'graphs/true_vs_predict/sapflow/rgb_vgg16_vs_resnet18.png', 
-        output_file=src_dir/'graphs/true_vs_predict/soil_moisture/only_rgb_resnet18_vs_rgb_tm_resnet18.png', 
-        # y_label='True Stem Flow (g/h)',
-        # x_label='Predicted Stem Flow (g/h)',
-        y_label='True Soil Moisture (%)',
-        x_label='Predicted Soil Moisture (%)',
-        label1='ResNet18',
-        label2='ResNet18_tm'
+        output_file=src_dir/'graphs/true_vs_predict/sapflow/resnet18_tm_vs_resnet18_tm_transformer.png', 
+        # output_file=src_dir/'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_vs_rgb_vgg16.png', 
+        y_label='True Stem Flow (g/h)',
+        x_label='Predicted Stem Flow (g/h)',
+        # y_label='True Soil Moisture (%)',
+        # x_label='Predicted Soil Moisture (%)',
+        label1='ResNet18_tm_mlp',
+        label2='ResNet18_tm_transformer'
     )
     # -----需要改------
     cal_r2(labels)
@@ -105,5 +108,5 @@ def draw():
     
 
 if __name__ == '__main__':
-    infer_and_draw()
-    # draw()
+    # infer_and_draw()
+    draw()

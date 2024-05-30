@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from pathlib import Path
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 18})
 from sklearn.metrics import r2_score
 import numpy as np
 def compare_models(
@@ -124,3 +125,4 @@ def cal_r2(labels: list[Tuple[float, float, float]]):
     r2_1 = r2_score(y_true, y_predict1)
     r2_2 = r2_score(y_true, y_predict2)
     print(f'r2_1: {r2_1}, r2_2: {r2_2}')
+
