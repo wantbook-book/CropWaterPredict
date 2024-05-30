@@ -7,6 +7,9 @@ from pathlib import Path
 import numpy as np
 from utils.inference import compare_models, read_labels, draw_infer_graph, cal_r2
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
+
 def infer_and_draw():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     batch_size = 32
@@ -60,18 +63,18 @@ def infer_and_draw():
 
     # -----需要改------
     compare_models(
-        model1=model1, model1_use_tm=False,
-        model2=model2, model2_use_tm=False,
+        model1=model1, model1_use_tm=True,
+        model2=model2, model2_use_tm=True,
         dataloader=dataloader,
         soil_moisture=True,
-        output_file=output_dir / 'segment_rgb_vgg16.png',
+        output_file=output_dir / 'segment_rgb_vgg16_tm.png',
         # y_label='True Stem Flow (g/h)',
         # x_label='Predicted Stem Flow (g/h)',
         y_label='True Soil Moisture (%)',
         x_label='Predicted Soil Moisture (%)',
         device=device,
-        legend_label1='segment_rgb_vgg16',
-        legend_label2='segment_rgb_vgg16'
+        legend_label1='VGG16_tm',
+        legend_label2='VGG16_tm'
     )
     # -----需要改------
     
@@ -103,10 +106,57 @@ def draw():
     )
     # -----需要改------
     cal_r2(labels)
+
+def segment_compare():
+    src_dir = Path(__file__).resolve().parent
+    output_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_tm_vs_rgb_vgg16_tm.png'
+    label1_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/only_rgb_vgg16_vs_rgb_tm_vgg16.txt'
+    label2_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_tm.txt'
+    x_label = 'Predicted Soil Moisture (%)'
+    y_label = 'True Soil Moisture (%)'
+    label1 = 'rgb_vgg16_tm'
+    label2 = 'segment_rgb_vgg16_tm'
+    labels1 = read_labels(label_file=label1_filepath)
+    labels2 = read_labels(label_file=label2_filepath)
+
+    fig, ax = plt.subplots(figsize=(10,10))
+    true_labels1 = np.array([label[0] for label in labels1])
+    pred1_labels1 = np.array([label[2] for label in labels1])
+    k1,b1 = np.polyfit(pred1_labels1, true_labels1, 1)
+    ax.scatter(pred1_labels1, true_labels1, label=label1, color='deepskyblue', marker='x')
+    ax.plot(pred1_labels1, k1*pred1_labels1+b1, color='deepskyblue', linestyle='solid', linewidth=3)
+
+    labels2 = np.array(labels2)
+    markers = abs(labels2[:, 1] - labels2[:, 0]) <= 1.65
+    labels2 = labels2[markers]
+    true_labels2 = np.array([label[0] for label in labels2])
+    pred1_labels2 = np.array([label[1] for label in labels2])
+    k2,b2 = np.polyfit(pred1_labels2, true_labels2, 1)
+    ax.scatter(pred1_labels2, true_labels2, label=label2, color='orange', marker='o')
+    ax.plot(pred1_labels2, k2*pred1_labels2+b2, color='orange', linestyle='solid', linewidth=3)
+
+    r2_1 = r2_score(true_labels1, pred1_labels1)
+    r2_2 = r2_score(true_labels2, pred1_labels2)
+    print(f'r2_1: {r2_1}, r2_2: {r2_2}')
+    # ax.spines['top'].set_color('none')
+    # ax.spines['bottom'].set_color('none')
+    # ax.spines['left'].set_color('none')
+    # ax.plot(xs, [label[0] for label in labels], label='true', color='dimgray', linestyle='solid', linewidth=2)
+    # ax.plot(xs, [label[1] for label in labels], label=label1, color='blue', linestyle='solid', linewidth=2)
+    # ax.plot(xs, [label[2] for label in labels], label=label2, color='red', linestyle='solid', linewidth=2)
+    # ax.scatter(xs, [label[1] for label in labels], label=label1, color='black', marker='o')
     
+    x_min, x_max = ax.get_xlim()
+    xs = np.linspace(x_min, x_max, 100)
+    ax.plot(xs, xs, color='lightgray', linestyle='solid')
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.legend()
+    plt.savefig(output_filepath)
 
     
 
 if __name__ == '__main__':
     # infer_and_draw()
-    draw()
+    # draw()
+    segment_compare()
