@@ -109,26 +109,33 @@ def draw():
 
 def segment_compare():
     src_dir = Path(__file__).resolve().parent
-    output_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_tm_vs_rgb_vgg16_tm.png'
+    # -----需要改------
+    output_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_vs_rgb_vgg16.png'
     label1_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/only_rgb_vgg16_vs_rgb_tm_vgg16.txt'
-    label2_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16_tm.txt'
+    label2_filepath = src_dir / 'graphs/true_vs_predict/soil_moisture/segment_rgb_vgg16.txt'
     x_label = 'Predicted Soil Moisture (%)'
     y_label = 'True Soil Moisture (%)'
-    label1 = 'rgb_vgg16_tm'
-    label2 = 'segment_rgb_vgg16_tm'
+    label1 = 'rgb_vgg16'
+    label2 = 'segment_rgb_vgg16'
+    # -----需要改------
     labels1 = read_labels(label_file=label1_filepath)
     labels2 = read_labels(label_file=label2_filepath)
 
     fig, ax = plt.subplots(figsize=(10,10))
     true_labels1 = np.array([label[0] for label in labels1])
-    pred1_labels1 = np.array([label[2] for label in labels1])
+    # -----需要改------
+    pred1_labels1 = np.array([label[1] for label in labels1])
+    # pred1_labels1 = np.array([label[2] for label in labels1])
+    # -----需要改------
     k1,b1 = np.polyfit(pred1_labels1, true_labels1, 1)
     ax.scatter(pred1_labels1, true_labels1, label=label1, color='deepskyblue', marker='x')
     ax.plot(pred1_labels1, k1*pred1_labels1+b1, color='deepskyblue', linestyle='solid', linewidth=3)
 
     labels2 = np.array(labels2)
-    markers = abs(labels2[:, 1] - labels2[:, 0]) <= 1.65
-    labels2 = labels2[markers]
+    # -----需要改------
+    # markers = abs(labels2[:, 1] - labels2[:, 0]) <= 1.65
+    # labels2 = labels2[markers]
+    # -----需要改------
     true_labels2 = np.array([label[0] for label in labels2])
     pred1_labels2 = np.array([label[1] for label in labels2])
     k2,b2 = np.polyfit(pred1_labels2, true_labels2, 1)
